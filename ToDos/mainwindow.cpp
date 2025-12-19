@@ -52,16 +52,19 @@ MainWindow::MainWindow(QWidget *parent) :
     n_noteButton->setStyleSheet("border-radius: 30px; background-color: rgba(232, 145, 125, 1);");
     n_noteButton->setIcon(QIcon(QString(mainPathToSource + "\\IMG\\notif.svg.png")));
     n_noteButton->setIconSize(n_noteButton->size() * 0.9);
+    n_noteButton->setToolTip("Уведомления");
 
     n_settingsButton->setFixedSize(75, 75);
     n_settingsButton->setStyleSheet("border-radius: 25px; background-color: rgba(189, 190, 194, 1);");
     n_settingsButton->setIcon(QIcon(QString(mainPathToSource + "\\IMG\\settings.png")));
     n_settingsButton->setIconSize(n_settingsButton->size());
+    n_settingsButton->setToolTip("Настройки");
 
 
     n_aboutButton->setFixedSize(70, 70);
     n_aboutButton->setStyleSheet("QPushButton{border-radius: 35px; background-color: rgba(0, 186, 255, 1); color: white; font-size: 50px;}");
     n_aboutButton->setText("?");
+    n_aboutButton->setToolTip("Справка");
 
     ui->TabsWidget->setStyleSheet("QWidget{background-color: rgba(198, 184, 167, 1); border: 3px solid black;}");
 
@@ -91,17 +94,22 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->searchString->setStyleSheet("QLineEdit{background-color: rgba(236, 243, 246, 1); border: 2px solid black; font-size: 35px;}");
     ui->searchString->setPlaceholderText("Поиск...");
     ui->searchButton->setStyleSheet("QPushButton{background-color: rgba(81, 226, 246, 0.53); border: 2px solid black; font-size: 25px;}");
-    ui->searchButton->setText("Искать");
+    ui->searchButton->setText("");
+    ui->searchButton->setIcon(QIcon(QString(mainPathToSource + "\\IMG\\loop.png")));
+    ui->searchButton->setIconSize(ui->filterButton->size());
+    ui->searchButton->setToolTip("Искать");
 
     ui->filterButton->setStyleSheet("QPushButton{background-color: rgba(205, 247, 198, 1); border: 2px solid black}");
     ui->filterButton->setIcon(QIcon(QString(mainPathToSource + "\\IMG\\filter.svg")));
     ui->filterButton->setIconSize(ui->filterButton->size());
     ui->filterButton->setText("");
+    ui->filterButton->setToolTip("Фильтр");
 
-    ui->deleteButton->setStyleSheet("QPushButton{background-color: rgba(239, 85, 85, 0.3); border: 2px solid black}");
-    ui->deleteButton->setIcon(QIcon(QString(mainPathToSource + "\\IMG\\trash.svg")));
+    ui->deleteButton->setStyleSheet("QPushButton{background-color: rgba(239, 85, 85, 0.3); border: 2px solid black;}");
+    ui->deleteButton->setIcon(QIcon(QString(mainPathToSource + "\\IMG\\off_trash.png")));
     ui->deleteButton->setIconSize(ui->deleteButton->size() * 0.9);
     ui->deleteButton->setText("");
+    ui->deleteButton->setToolTip("Удалить");
 
     ui->foldersWidget->setStyleSheet("QWidget{background-color: rgba(232, 203, 168, 1); border: 1px solid black;}");
 
@@ -109,6 +117,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->addFolderButton->setIcon(QIcon(QString(mainPathToSource + "\\IMG\\AddFolder.png")));
     ui->addFolderButton->setIconSize(ui->addFolderButton->size() * 0.9);
     ui->addFolderButton->setText("");
+    ui->addFolderButton->setToolTip("Новая папка");
 
     QHBoxLayout* foldersLayout = new QHBoxLayout;
     QListView* foldersOutput = new QListView;
@@ -128,11 +137,11 @@ MainWindow::~MainWindow()
 TimeDesk::TimeDesk(QWidget *parent):
     QWidget(parent)
 {
+    setToolTip("Закончить день");
     setStyleSheet("QWidget{background-color: rgba(230, 198, 145, 1); border: 3px solid black; font-size: 24px;}");
     QVBoxLayout* layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    //layout->setAlignment(Qt::AlignCenter);
     QLabel* name = new QLabel("Закончить день");
     name->setAlignment(Qt::AlignCenter);
     name->setStyleSheet("QLabel{border: 3px solid black; font-weight: Bold;}");
@@ -159,6 +168,7 @@ TimeDesk::TimeDesk(QWidget *parent):
 NearEventDesk::NearEventDesk(QWidget *parent):
     QWidget(parent)
 {
+    setToolTip("Открыть ближайшую цель");
     setStyleSheet("QWidget{background-color: rgba(230, 198, 145, 1); border: 3px solid black; font-size: 24px;}");
     QVBoxLayout* layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
