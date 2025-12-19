@@ -77,6 +77,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->TabsWidget->setLayout(tabsLayout);
 
     ui->TagsWidget->setStyleSheet("QWidget{background-color: rgba(196, 196, 196, 1); border: 3px solid black;}");
+    QVBoxLayout* tagsLayout = new QVBoxLayout;
+    QLabel* tagsHeader = new QLabel("Тэги");
+    tagsHeader->setStyleSheet("QLabel{border: 3px solid black; font-style: italic; font-weight: bold; font-size: 30px}");
+    tagsHeader->setAlignment(Qt::AlignCenter);
+    QListView* tagsOutput = new QListView;
+    tagsLayout->addWidget(tagsHeader, 1);
+    tagsLayout->addWidget(tagsOutput, 3);
+    tagsLayout->setContentsMargins(0, 0, 0, 0);
+    tagsLayout->setSpacing(0);
+    ui->TagsWidget->setLayout(tagsLayout);
 
     ui->searchString->setStyleSheet("QLineEdit{background-color: rgba(236, 243, 246, 1); border: 2px solid black; font-size: 35px;}");
     ui->searchString->setPlaceholderText("Поиск...");
@@ -94,6 +104,19 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->deleteButton->setText("");
 
     ui->foldersWidget->setStyleSheet("QWidget{background-color: rgba(232, 203, 168, 1); border: 1px solid black;}");
+
+    ui->addFolderButton->setStyleSheet("QPushButton{background-color: rgba(165, 224, 155, 1); border: 2px solid black}");
+    ui->addFolderButton->setIcon(QIcon(QString(mainPathToSource + "\\IMG\\AddFolder.png")));
+    ui->addFolderButton->setIconSize(ui->addFolderButton->size() * 0.9);
+    ui->addFolderButton->setText("");
+
+    QHBoxLayout* foldersLayout = new QHBoxLayout;
+    QListView* foldersOutput = new QListView;
+    foldersLayout->addWidget(foldersOutput, 7);
+    foldersLayout->addWidget(ui->addFolderButton, 1);
+    foldersLayout->setContentsMargins(0, 0, 0, 0);
+    foldersLayout->setSpacing(0);
+    ui->foldersWidget->setLayout(foldersLayout);
 }
 
 MainWindow::~MainWindow()
@@ -140,7 +163,6 @@ NearEventDesk::NearEventDesk(QWidget *parent):
     QVBoxLayout* layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    //layout->setAlignment(Qt::AlignCenter);
     QLabel* name = new QLabel("Ближайшая цель");
     name->setAlignment(Qt::AlignCenter);
     name->setStyleSheet("QLabel{border: 3px solid black; font-weight: Bold;}");

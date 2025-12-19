@@ -116,6 +116,19 @@
       <height>53</height>
      </rect>
     </property>
+    <widget class="QPushButton" name="addFolderButton">
+     <property name="geometry">
+      <rect>
+       <x>730</x>
+       <y>0</y>
+       <width>121</width>
+       <height>53</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>PushButton</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QLineEdit" name="searchString">
     <property name="geometry">

@@ -29,6 +29,7 @@ public:
     QPushButton *filterButton;
     QPushButton *deleteButton;
     QWidget *foldersWidget;
+    QPushButton *addFolderButton;
     QLineEdit *searchString;
 
     void setupUi(QMainWindow *MainWindow)
@@ -63,6 +64,9 @@ public:
         foldersWidget = new QWidget(centralWidget);
         foldersWidget->setObjectName(QString::fromUtf8("foldersWidget"));
         foldersWidget->setGeometry(QRect(169, 210, 851, 53));
+        addFolderButton = new QPushButton(foldersWidget);
+        addFolderButton->setObjectName(QString::fromUtf8("addFolderButton"));
+        addFolderButton->setGeometry(QRect(730, 0, 121, 53));
         searchString = new QLineEdit(centralWidget);
         searchString->setObjectName(QString::fromUtf8("searchString"));
         searchString->setGeometry(QRect(200, 145, 461, 61));
@@ -79,6 +83,7 @@ public:
         searchButton->setText(QApplication::translate("MainWindow", "PushButton", nullptr));
         filterButton->setText(QApplication::translate("MainWindow", "PushButton", nullptr));
         deleteButton->setText(QApplication::translate("MainWindow", "PushButton", nullptr));
+        addFolderButton->setText(QApplication::translate("MainWindow", "PushButton", nullptr));
     } // retranslateUi
 
 };
