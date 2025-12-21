@@ -5,6 +5,54 @@
 #include <QListView>
 #include <QDialog>
 #include <QString>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QFile>
+#include <QStyledItemDelegate>
+
+
+class TabsDelegate : public QStyledItemDelegate {
+public:
+    void paint(QPainter* painter,
+               const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override
+    {
+        QStyleOptionViewItem opt = option;
+        opt.font.setPointSize(14);
+        opt.font.setBold(option.state & QStyle::State_Selected);
+        QStyledItemDelegate::paint(painter, opt, index);
+    }
+};
+
+class TagsDelegate : public QStyledItemDelegate {
+public:
+    void paint(QPainter* painter,
+               const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override
+    {
+        QStyleOptionViewItem opt = option;
+        opt.font.setPointSize(12);
+        opt.font.setBold(option.state & QStyle::State_Selected);
+        QStyledItemDelegate::paint(painter, opt, index);
+    }
+};
+
+class FoldersDelegate : public QStyledItemDelegate {
+public:
+    void paint(QPainter* painter,
+               const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override
+    {
+        QStyleOptionViewItem opt = option;
+        opt.font.setPointSize(9);
+        opt.font.setBold(option.state & QStyle::State_Selected);
+        QStyledItemDelegate::paint(painter, opt, index);
+    }
+};
+
+//----------------------------------------------------------------------------------------------------------
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -70,11 +118,50 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->TabsWidget->setStyleSheet("QWidget{background-color: rgba(198, 184, 167, 1); border: 3px solid black;}");
 
+
     QVBoxLayout* tabsLayout = new QVBoxLayout;
     QLabel* tabsHeader = new QLabel("Вкладки");
     tabsHeader->setStyleSheet("QLabel{border: 3px solid black; font-weight: Bold; font-size: 30px}");
     tabsHeader->setAlignment(Qt::AlignCenter);
+
+    QString tabcolor = "rgba(222, 206, 187, 1)";
+    QString ItemStyle = QString(R"(
+                         QListView {
+                             font-size: 14px;
+                             font-family: "Segoe UI";
+                             outline: 0;
+                         }
+
+                         QListView::item {
+                             background-color: %1;
+                             border: 3px solid black;
+                             padding: 10px;
+                             margin: 3px;
+                             color: black;
+                         }
+                         QListView::item:hover {
+                             background-color: rgba(255, 240, 163, 1);
+                             border: 3px solid black;
+                         }
+                         QListView::item:selected {
+                             background-color: rgba(255, 240, 163, 1);
+                             border: 5px solid black;
+                             font-weight: bold;
+                         }
+
+                     )");
+
+    QString tabItemStyle = QString(ItemStyle).arg(tabcolor);
     QListView* tabsOutput = new QListView;
+    tabsOutput->setFlow(QListView::TopToBottom);
+    tabsOutput->setSpacing(1);
+    tabsOutput->setStyleSheet(tabItemStyle);
+    tabsOutput->setItemDelegate(new TabsDelegate);
+    TabsList* tabsModel = importTabsFromJson();
+    tabsOutput->setModel(tabsModel);
+    tabsOutput->setCurrentIndex(tabsModel->index(0, 0));
+    tabsModel->select(0);
+    tabsOutput->show();
     tabsLayout->addWidget(tabsHeader, 1);
     tabsLayout->addWidget(tabsOutput, 4);
     tabsLayout->setContentsMargins(0, 0, 0, 0);
@@ -86,12 +173,22 @@ MainWindow::MainWindow(QWidget *parent) :
     QLabel* tagsHeader = new QLabel("Тэги");
     tagsHeader->setStyleSheet("QLabel{border: 3px solid black; font-style: italic; font-weight: bold; font-size: 30px}");
     tagsHeader->setAlignment(Qt::AlignCenter);
+    QString tagcolor = "rgba(223, 212, 212, 1)";
+    QString tagItemStyle = QString(ItemStyle).arg(tagcolor);
     QListView* tagsOutput = new QListView;
+    tagsOutput->setFlow(QListView::TopToBottom);
+    tagsOutput->setSpacing(1);
+    tagsOutput->setStyleSheet(tagItemStyle);
+    tagsOutput->setItemDelegate(new TagsDelegate);
+    TagsList* tagsModel = importTagsFromJson();
+    tagsOutput->setModel(tagsModel);
+    tagsOutput->show();
     tagsLayout->addWidget(tagsHeader, 1);
     tagsLayout->addWidget(tagsOutput, 3);
     tagsLayout->setContentsMargins(0, 0, 0, 0);
     tagsLayout->setSpacing(0);
     ui->TagsWidget->setLayout(tagsLayout);
+
 
     ui->searchString->setStyleSheet("QLineEdit{background-color: rgba(236, 243, 246, 1); border: 2px solid black; font-size: 35px;}");
     ui->searchString->setPlaceholderText("Поиск...");
@@ -123,6 +220,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QHBoxLayout* foldersLayout = new QHBoxLayout;
     QListView* foldersOutput = new QListView;
+    foldersOutput->setFlow(QListView::LeftToRight);
+    foldersOutput->setSpacing(1);
+    foldersOutput->setItemDelegate(new FoldersDelegate);
+    FoldersList* foldersModel = importFoldersFromJson();
+    foldersOutput->setModel(foldersModel);
+    foldersOutput->setCurrentIndex(foldersModel->index(0, 0));
+    foldersOutput->setModel(foldersModel);
+    foldersOutput->show();
     foldersLayout->addWidget(foldersOutput, 7);
     foldersLayout->addWidget(ui->addFolderButton, 1);
     foldersLayout->setContentsMargins(0, 0, 0, 0);
@@ -130,6 +235,40 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->foldersWidget->setLayout(foldersLayout);
 
     connect(ui->addFolderButton, &QPushButton::clicked, this, &MainWindow::openAddFolder);
+
+    tabsOutput->setSelectionMode(QAbstractItemView::SingleSelection);
+    tagsOutput->setSelectionMode(QAbstractItemView::SingleSelection);
+    foldersOutput->setSelectionMode(QAbstractItemView::SingleSelection);
+    connect(tabsOutput->selectionModel(),
+            &QItemSelectionModel::currentChanged,
+            this,
+            [tabsModel](const QModelIndex& current, const QModelIndex&) {
+                tabsModel->select(current.row());
+            });
+    connect(tabsOutput->selectionModel(),
+            &QItemSelectionModel::currentChanged,
+            this,
+            [tagsOutput](const QModelIndex& current, const QModelIndex&) {
+                //if(current.isValid()){
+                    auto sm = tagsOutput->selectionModel();
+                        sm->blockSignals(true);
+                        sm->clearSelection();
+                        sm->setCurrentIndex(QModelIndex(), QItemSelectionModel::NoUpdate);
+                        sm->blockSignals(false);
+                    //};
+                });
+    connect(tagsOutput->selectionModel(),
+            &QItemSelectionModel::currentChanged,
+            this,
+            [tabsOutput](const QModelIndex& current, const QModelIndex&) {
+                //if(current.isValid()){
+                    auto sm = tabsOutput->selectionModel();
+                                sm->blockSignals(true);
+                                sm->clearSelection();
+                                sm->setCurrentIndex(QModelIndex(), QItemSelectionModel::NoUpdate);
+                                sm->blockSignals(false);
+                 //};
+            });
 }
 
 MainWindow::~MainWindow()
@@ -237,13 +376,21 @@ void MainWindow::openAddFolder()
 
 //------------------DATA---------------------------------------------------------------------------------
 
+ChoosableObjectsList::ChoosableObjectsList(QObject* parent)
+    : QAbstractListModel(parent)
+{
+}
 
 int ChoosableObjectsList::rowCount(const QModelIndex&) const{
     return m_items.size();
 }
 
-Qt::ItemFlags ChoosableObjectsList::flags(const QModelIndex& index) const{
+Qt::ItemFlags ChoosableObjectsList::flags(const QModelIndex& index) const
+{
+    if (!index.isValid())
+        return Qt::NoItemFlags;
 
+    return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
 QVariant ChoosableObjectsList::data(const QModelIndex& index, int role) const
@@ -255,6 +402,7 @@ QVariant ChoosableObjectsList::data(const QModelIndex& index, int role) const
 
     switch(role){
         case Qt::DisplayRole:
+            return item->name;
         case NameRole:
             return item->name;
         case SelectedRole:
@@ -273,6 +421,16 @@ void ChoosableObjectsList::select(int row)
     emit dataChanged(index(0), index(m_items.size() - 1));
 }
 
+
+void ChoosableObjectsList::add(ChoosableObject* item)
+{
+    beginInsertRows(QModelIndex(), m_items.size(), m_items.size());
+    m_items.push_back(item);
+    endInsertRows();
+}
+
+
+
 QVariant TagsList::data(const QModelIndex& index, int role) const{
     if(!index.isValid())
         return {};
@@ -290,3 +448,132 @@ QVariant TagsList::data(const QModelIndex& index, int role) const{
         }
     return ChoosableObjectsList::data(index, role);
 }
+
+QVariant GoalsList::data(const QModelIndex& index, int role) const{
+    if(!index.isValid())
+        return {};
+
+    auto* goal = dynamic_cast<Goal*>(m_items[index.row()]);
+    if(!goal){
+        return {};
+    }
+
+    switch(role){
+        case DescriptionRole:
+            return goal->description;
+        case TypeRole:
+            return goal->type;
+        case CurrentRole:
+            return goal->current;
+        case TargetRole:
+            return goal->target;
+        case SubgoalsRole:
+            return goal->subgoalIds;
+        case DeadlineRole:
+            return goal->deadline;
+        case TagRole:
+            return goal->tagIds;
+        case FolderRole:
+            return goal->folderId;
+        case ParentRole:
+            return goal->parentId;
+        }
+    return ChoosableObjectsList::data(index, role);
+}
+
+bool GoalsFilterModel::filterAcceptsRow(int row, const QModelIndex& parent) const
+{
+    QModelIndex idx = sourceModel()->index(row, 0, parent);
+
+    const QString folderId =
+        sourceModel()->data(idx, FolderRole).toString();
+
+    const QStringList tags =
+        sourceModel()->data(idx, TagRole).toStringList();
+
+    if (!m_folderId.isEmpty() && folderId != m_folderId)
+        return false;
+
+    if (!m_tagId.isEmpty()) {
+        if (!tags.contains(m_tagId))
+            return false;
+    }
+
+    return true;
+}
+
+
+TabsList* MainWindow::importTabsFromJson(){
+    QFile json(QString(*mainPathToSource + "\\DATA\\TABS.json"));
+    if (!json.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return nullptr;
+    }
+    QJsonDocument doc = QJsonDocument::fromJson(json.readAll());
+    QJsonObject root = doc.object();
+    QJsonArray tabsArray = root["tabs"].toArray();
+    json.close();
+    TabsList* tabsModel = new TabsList(this);
+
+    for (const QJsonValue& value : tabsArray) {
+        QJsonObject obj = value.toObject();
+
+        Tab* tab = new Tab;
+        tab->id = obj["id"].toString();
+        tab->name = obj["name"].toString();
+
+        tabsModel->add(tab);
+    }
+
+    return tabsModel;
+}
+
+TagsList* MainWindow::importTagsFromJson(){
+    QFile json(QString(*mainPathToSource + "\\DATA\\TAGS.json"));
+    if (!json.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return nullptr;
+    }
+    QJsonDocument doc = QJsonDocument::fromJson(json.readAll());
+    QJsonObject root = doc.object();
+    QJsonArray tagsArray = root["tags"].toArray();
+    json.close();
+    TagsList* tagsModel = new TagsList(this);
+
+    for (const QJsonValue& value : tagsArray) {
+        QJsonObject obj = value.toObject();
+
+        Tag* tag = new Tag;
+        tag->id = obj["id"].toString();
+        tag->name = obj["name"].toString();
+        tag->color = obj["color"].toString();
+
+        tagsModel->add(tag);
+    }
+
+    return tagsModel;
+}
+
+FoldersList* MainWindow::importFoldersFromJson(){
+    QFile json(QString(*mainPathToSource + "\\DATA\\FOLDERS.json"));
+    if (!json.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return nullptr;
+    }
+    QJsonDocument doc = QJsonDocument::fromJson(json.readAll());
+    QJsonObject root = doc.object();
+    QJsonArray tabsArray = root["folders"].toArray();
+    json.close();
+    FoldersList* foldersModel = new FoldersList(this);
+
+    for (const QJsonValue& value : tabsArray) {
+        QJsonObject obj = value.toObject();
+
+        Folder* folder = new Folder;
+        folder->id = obj["id"].toString();
+        folder->name = obj["name"].toString();
+
+        foldersModel->add(folder);
+    }
+
+    return foldersModel;
+}
+
+

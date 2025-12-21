@@ -51,7 +51,7 @@ public:
         TabsWidget->setGeometry(QRect(0, 145, 167, 289));
         TagsWidget = new QWidget(centralWidget);
         TagsWidget->setObjectName(QString::fromUtf8("TagsWidget"));
-        TagsWidget->setGeometry(QRect(0, 440, 167, 180));
+        TagsWidget->setGeometry(QRect(0, 440, 167, 191));
         searchButton = new QPushButton(centralWidget);
         searchButton->setObjectName(QString::fromUtf8("searchButton"));
         searchButton->setGeometry(QRect(660, 145, 95, 61));

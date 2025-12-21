@@ -5,6 +5,8 @@
 #include <QPushButton>
 #include <QAbstractItemModel>
 #include <QDateTime>
+#include <QSortFilterProxyModel>
+
 
 namespace Ui {
 class MainWindow;
@@ -21,6 +23,37 @@ class Goal;
 
 class ChoosableObjectsList;
 class FoldersList;
+class TabsList;
+class TagsList;
+class GoalsList;
+
+class GoalsFilterModel;
+
+
+enum TagRoles{
+    ColorRole = Qt::UserRole + 10,
+    InKanbanRole
+};
+
+
+enum Roles {
+    IdRole = Qt::UserRole + 1,
+    NameRole,
+    SelectedRole,
+    TypeRole
+};
+
+
+enum GoalsRoles {
+    DescriptionRole = Qt::UserRole + 20,
+    DeadlineRole,
+    CurrentRole,
+    TargetRole,
+    SubgoalsRole,
+    ParentRole,
+    TagRole,
+    FolderRole
+};
 
 class MainWindow : public QMainWindow
 {
@@ -39,6 +72,10 @@ private:
     QPushButton* n_noteButton;
     QPushButton* n_settingsButton;
     QPushButton* n_aboutButton;
+
+    TabsList* importTabsFromJson();
+    TagsList* importTagsFromJson();
+    FoldersList* importFoldersFromJson();
 
 
 private slots:
@@ -102,8 +139,10 @@ public:
     int current = 0;
     int target = 0;
 
+    QStringList subgoalIds;
+
     QString parentId;
-    QList<QString> tagIds;
+    QStringList tagIds;
     QString folderId;
 };
 
@@ -112,19 +151,12 @@ class ChoosableObjectsList : public QAbstractListModel
 {
     Q_OBJECT
 public:
-    explicit ChoosableObjectsList(QObject* patent = nullptr);
-
+    explicit ChoosableObjectsList(QObject* parent = nullptr);
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role) const override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;
     void select(int row);
-
-    enum Roles {
-        IdRole = Qt::UserRole + 1,
-        NameRole,
-        SelectedRole,
-        TypeRole
-    };
+    void add(ChoosableObject* item);
 
 protected:
     QVector<ChoosableObject*> m_items;
@@ -133,21 +165,45 @@ protected:
 
 class FoldersList : public ChoosableObjectsList
 {
+public:
+    explicit FoldersList(QObject* parent = nullptr): ChoosableObjectsList(parent) {}
+};
 
+class TabsList : public ChoosableObjectsList
+{
+public:
+    explicit TabsList(QObject* parent = nullptr): ChoosableObjectsList(parent) {}
 };
 
 class TagsList : public ChoosableObjectsList
 {
 public:
+    explicit TagsList(QObject* parent = nullptr): ChoosableObjectsList(parent) {}
     QVariant data(const QModelIndex& index, int role) const override;
-    enum TagRoles{
-        ColorRole = Qt::UserRole + 10,
-        InKanbanRole
-    };
 };
 
 class GoalsList : public ChoosableObjectsList{
+public:
+    QVariant data(const QModelIndex& index, int role) const override;
+};
 
+class GoalsFilterModel : public QSortFilterProxyModel
+{
+    Q_OBJECT
+public:
+    explicit GoalsFilterModel(QObject* parent = nullptr);
+
+    void setCurrentTab(const QString& tabId);
+    void setCurrentTag(const QString& tagId);
+    void setCurrentFolder(const QString& folderId);
+
+protected:
+    bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override;
+
+private:
+    QString m_tabId;
+    QString m_tagId;
+    QString m_folderId;
 };
 
 
