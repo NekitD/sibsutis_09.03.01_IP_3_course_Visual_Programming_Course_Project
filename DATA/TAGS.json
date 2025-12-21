@@ -1,0 +1,20 @@
+[
+    {
+        "id": "tag_0",
+        "name": "Важно",
+        "color": "rgba(203, 247, 179, 1)",
+        "in_kanban" : false
+    },
+    {
+        "id": "tag_1",
+        "name": "Срочно",
+        "color": "rgba(247, 179, 179, 1)",
+        "in_kanban" : false
+    },
+    {
+        "id": "tag_2",
+        "name": "В работе",
+        "color": "rgba(232, 178, 114, 1)",
+        "in_kanban" : true
+    }
+]

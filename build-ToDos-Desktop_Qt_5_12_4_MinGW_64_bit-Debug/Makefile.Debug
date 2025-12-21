@@ -216,6 +216,10 @@ debug/moc_mainwindow.cpp: ../ToDos/mainwindow.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QPushButton \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qpushbutton.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractbutton.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QAbstractItemModel \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qabstractitemmodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QDateTime \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qdatetime.h \
 		debug/moc_predefs.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/bin/moc.exe
 	C:\Qt\Qt5.12.4\5.12.4\mingw73_64\bin\moc.exe $(DEFINES) --include C:/Users/Danik/Desktop/sibsutis_09.03.01_IP_3_course_Visual_Programming_Course_Project/build-ToDos-Desktop_Qt_5_12_4_MinGW_64_bit-Debug/debug/moc_predefs.h -IC:/Qt/Qt5.12.4/5.12.4/mingw73_64/mkspecs/win32-g++ -IC:/Users/Danik/Desktop/sibsutis_09.03.01_IP_3_course_Visual_Programming_Course_Project/ToDos -IC:/Qt/Qt5.12.4/5.12.4/mingw73_64/include -IC:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets -IC:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtGui -IC:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtANGLE -IC:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore -I. -IC:/Qt/Qt5.12.4/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++ -IC:/Qt/Qt5.12.4/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/x86_64-w64-mingw32 -IC:/Qt/Qt5.12.4/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/backward -IC:/Qt/Qt5.12.4/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include -IC:/Qt/Qt5.12.4/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include-fixed -IC:/Qt/Qt5.12.4/Tools/mingw730_64/x86_64-w64-mingw32/include ..\ToDos\mainwindow.h -o debug\moc_mainwindow.cpp
@@ -353,6 +357,10 @@ debug/main.o: ../ToDos/main.cpp ../ToDos/mainwindow.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QPushButton \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qpushbutton.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractbutton.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QAbstractItemModel \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qabstractitemmodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QDateTime \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qdatetime.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QApplication \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qapplication.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qcoreapplication.h \
@@ -472,6 +480,10 @@ debug/mainwindow.o: ../ToDos/mainwindow.cpp ../ToDos/mainwindow.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QPushButton \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qpushbutton.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractbutton.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QAbstractItemModel \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qabstractitemmodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QDateTime \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qdatetime.h \
 		ui_mainwindow.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QVariant \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QApplication \
@@ -495,7 +507,25 @@ debug/mainwindow.o: ../ToDos/mainwindow.cpp ../ToDos/mainwindow.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qlayoutitem.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qgridlayout.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QLabel \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qlabel.h
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qlabel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QListView \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qlistview.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractitemview.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractscrollarea.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qitemselectionmodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractitemdelegate.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qstyleoption.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractspinbox.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtGui/qvalidator.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qregularexpression.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qslider.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractslider.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qstyle.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qtabbar.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qrubberband.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QDialog \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qdialog.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QString
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug\mainwindow.o ..\ToDos\mainwindow.cpp
 
 debug/moc_mainwindow.o: debug/moc_mainwindow.cpp 

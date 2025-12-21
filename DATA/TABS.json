@@ -1,17 +1,19 @@
 [
     {
-        "name": "Важно",
-        "color": "rgba(203, 247, 179, 1)",
-        "in_kanban" : false
+        "id": "today",
+        "name": "Сегодня"
     },
     {
-        "name": "Срочно",
-        "color": "rgba(247, 179, 179, 1)",
-        "in_kanban" : false
+        "id": "all",
+        "name": "Входящие"
     },
     {
-        "name": "В работе",
-        "color": "rgba(232, 178, 114, 1)",
-        "in_kanban" : true
+        "id": "calendar",
+        "name": "Календарь"
+    },
+    {
+        "id": "kanban",
+        "name": "Доски"
     }
+
 ]
