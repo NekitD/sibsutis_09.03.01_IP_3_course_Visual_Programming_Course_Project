@@ -31,6 +31,7 @@ public:
     QWidget *foldersWidget;
     QPushButton *addFolderButton;
     QLineEdit *searchString;
+    QWidget *GoalsWidget;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -70,6 +71,9 @@ public:
         searchString = new QLineEdit(centralWidget);
         searchString->setObjectName(QString::fromUtf8("searchString"));
         searchString->setGeometry(QRect(200, 145, 461, 61));
+        GoalsWidget = new QWidget(centralWidget);
+        GoalsWidget->setObjectName(QString::fromUtf8("GoalsWidget"));
+        GoalsWidget->setGeometry(QRect(170, 269, 851, 371));
         MainWindow->setCentralWidget(centralWidget);
 
         retranslateUi(MainWindow);

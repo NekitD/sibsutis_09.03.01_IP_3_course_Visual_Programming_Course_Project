@@ -8,6 +8,7 @@
 #include <QSortFilterProxyModel>
 #include <QLabel>
 #include <QListView>
+#include <QStyledItemDelegate>
 
 
 namespace Ui {
@@ -30,6 +31,16 @@ class TagsList;
 class GoalsList;
 
 class GoalsFilterModel;
+class GoalsTableModel;
+
+
+enum Columns {
+    NameColumn,
+    DescriptionColumn,
+    DeadlineColumn,
+    StatusColumn,
+    ColumnCount
+};
 
 
 enum TagRoles{
@@ -56,6 +67,7 @@ enum GoalsRoles {
     TagRole,
     FolderRole
 };
+
 
 class MainWindow : public QMainWindow
 {
@@ -86,7 +98,9 @@ private:
     TabsList* importTabsFromJson();
     TagsList* importTagsFromJson();
     FoldersList* importFoldersFromJson();
+    QVector<Goal*> importGoalsFromJson();
     void saveFoldersToJson();
+
 
 
 private slots:
@@ -238,5 +252,33 @@ private:
     QString m_folderId;
 };
 
+class GoalsTableModel : public QAbstractTableModel {
+    Q_OBJECT
+public:
+    explicit GoalsTableModel(QObject* parent = nullptr);
+
+    int rowCount(const QModelIndex& = QModelIndex()) const override;
+    int columnCount(const QModelIndex& = QModelIndex()) const override;
+    QVariant data(const QModelIndex& index, int role) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+
+    void setGoals(const QVector<Goal*>& goals);
+
+private:
+    QVector<Goal*> m_goals;
+};
+
+class GoalsDelegate : public QStyledItemDelegate {
+    Q_OBJECT
+public:
+    explicit GoalsDelegate(QObject* parent = nullptr);
+
+    void paint(QPainter* painter,
+               const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override;
+
+    QSize sizeHint(const QStyleOptionViewItem& option,
+                   const QModelIndex& index) const override;
+};
 
 #endif // MAINWINDOW_H

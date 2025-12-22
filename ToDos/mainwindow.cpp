@@ -15,6 +15,8 @@
 #include <QDateTime>
 #include <QLocale>
 #include <QUuid>
+#include <QTableView>
+#include <QHeaderView>
 
 
 class TabsDelegate : public QStyledItemDelegate {
@@ -59,20 +61,18 @@ public:
         QStyleOptionViewItem opt = option;
         initStyleOption(&opt, index);
 
-        // Настройки шрифта
         QFont font = opt.font;
         font.setPointSize(25);
         font.setBold(opt.state & QStyle::State_Selected);
         opt.font = font;
         opt.displayAlignment = Qt::AlignCenter;
-
+        painter->setPen(QPen(QColor(0, 0, 0), 1));
         if (opt.state & QStyle::State_Selected) {
             painter->fillRect(opt.rect, QColor(232, 208, 121));
             painter->setPen(QPen(QColor(0, 0, 0), 2));
             painter->drawRect(opt.rect.adjusted(1, 1, -1, -1));
         }
 
-        // Рисуем текст
         painter->setPen(Qt::black);
         painter->setFont(font);
         painter->drawText(opt.rect, Qt::AlignCenter, opt.text);
@@ -98,6 +98,13 @@ private:
     int width;
     int height;
 };
+
+
+
+GoalsDelegate::GoalsDelegate(QObject* parent)
+    : QStyledItemDelegate(parent)
+{
+}
 
 //----------------------------------------------------------------------------------------------------------
 
@@ -275,7 +282,7 @@ MainWindow::MainWindow(QWidget *parent) :
                          }
 
                          QListView::item {
-                             border: 3px solid black;
+                             border: 2px solid black;
                              padding: 1px;
                              margin: 0px;
                              color: black;
@@ -339,6 +346,43 @@ MainWindow::MainWindow(QWidget *parent) :
                                 sm->blockSignals(false);
                  //};
             });
+
+
+
+    auto* goalsView = new QTableView(ui->GoalsWidget);
+    auto* goalsModel = new GoalsTableModel(this);
+
+    goalsModel->setGoals(importGoalsFromJson());
+
+    goalsView->setModel(goalsModel);
+    goalsView->setItemDelegate(new GoalsDelegate(goalsView));
+
+    goalsView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    goalsView->verticalHeader()->setVisible(false);
+    goalsView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    goalsView->setSelectionMode(QAbstractItemView::SingleSelection);
+
+    auto* goalsLayout = new QVBoxLayout(ui->GoalsWidget);
+    goalsLayout->setContentsMargins(0, 0, 0, 0);
+    goalsLayout->addWidget(goalsView);
+
+
+    ui->GoalsWidget->setLayout(goalsLayout);
+
+
+    goalsView->setStyleSheet(R"(
+        QTableView {
+            background: rgba(255, 250, 230, 1);
+            border: 3px solid black;
+            font-size: 16px;
+        }
+        QTableView::item {
+            padding: 1px;
+        }
+        QTableView::item:selected {
+            background: rgba(255, 230, 160, 1);
+        }
+    )");
 }
 
 MainWindow::~MainWindow()
@@ -802,4 +846,134 @@ Goal* GoalsList::nearestGoal(const QDateTime& now) const
         }
     }
     return nearest;
+}
+
+//-------------------------------------------------------------------------------
+
+GoalsFilterModel::GoalsFilterModel(QObject* parent)
+    : QSortFilterProxyModel(parent)
+{
+}
+
+
+GoalsTableModel::GoalsTableModel(QObject* parent)
+    : QAbstractTableModel(parent)
+{
+}
+
+int GoalsTableModel::rowCount(const QModelIndex&) const {
+    return m_goals.size();
+}
+
+int GoalsTableModel::columnCount(const QModelIndex&) const {
+    return ColumnCount;
+}
+
+QVariant GoalsTableModel::data(const QModelIndex& index, int role) const
+{
+    if (!index.isValid() || role != Qt::DisplayRole)
+        return {};
+
+    const Goal* g = m_goals.at(index.row());
+
+    switch (index.column()) {
+        case NameColumn:
+            return g->name;
+        case DescriptionColumn:
+            return g->description;
+        case DeadlineColumn:
+            return g->deadline.isValid()
+                ? g->deadline.toString("dd.MM.yyyy HH:mm")
+                : "—";
+        case StatusColumn:
+            return QString("%1 / %2").arg(g->current).arg(g->target);
+    }
+    return {};
+}
+
+QVariant GoalsTableModel::headerData(int section,
+                                    Qt::Orientation orientation,
+                                    int role) const
+{
+    if (orientation != Qt::Horizontal || role != Qt::DisplayRole)
+        return {};
+
+    switch (section) {
+        case NameColumn: return "Цель";
+        case DescriptionColumn: return "Описание";
+        case DeadlineColumn: return "Срок";
+        case StatusColumn: return "Статусы";
+    }
+    return {};
+}
+
+void GoalsTableModel::setGoals(const QVector<Goal*>& goals)
+{
+    beginResetModel();
+    m_goals = goals;
+    endResetModel();
+}
+
+QSize GoalsDelegate::sizeHint(const QStyleOptionViewItem&, const QModelIndex&) const {
+    return QSize(100, 80);
+}
+
+void GoalsDelegate::paint(QPainter* p, const QStyleOptionViewItem& opt, const QModelIndex& idx) const
+{
+    p->save();
+
+    QRect r = opt.rect.adjusted(6, 6, -6, -6);
+
+    p->setBrush(opt.state & QStyle::State_Selected
+                ? QColor(255, 240, 163)
+                : QColor(255, 250, 220));
+    p->setPen(Qt::black);
+    p->drawRoundedRect(r, 10, 10);
+
+    p->setPen(Qt::black);
+    QFont f = opt.font;
+    f.setPointSize(12);
+    if (idx.column() == NameColumn)
+        f.setBold(true);
+
+    p->setFont(f);
+    p->drawText(r.adjusted(10, 8, -10, -8),
+                Qt::TextWordWrap,
+                idx.data().toString());
+
+    p->restore();
+}
+
+QVector<Goal*> MainWindow::importGoalsFromJson()
+{
+    QVector<Goal*> result;
+
+    QFile file(*mainPathToSource + "\\DATA\\GOALS.json");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return result;
+
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    QJsonArray arr = doc.object()["goals"].toArray();
+
+    for (const auto& v : arr) {
+        QJsonObject o = v.toObject();
+
+        Goal* g = new Goal;
+        g->id = o["id"].toString();
+        g->name = o["name"].toString();
+        g->description = o["description"].toString();
+        g->type = o["type"].toString();
+        g->current = o["current"].toInt();
+        g->target = o["target"].toInt();
+        g->folderId = o["folderId"].toString();
+        g->parentId = o["parentId"].toString();
+        g->deadline = QDateTime::fromString(o["deadline"].toString(), Qt::ISODate);
+
+        for (auto t : o["tagIds"].toArray())
+            g->tagIds << t.toString();
+
+        result.push_back(g);
+    }
+
+    return result;
 }

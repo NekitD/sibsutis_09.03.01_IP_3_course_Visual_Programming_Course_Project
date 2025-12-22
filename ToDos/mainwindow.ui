@@ -140,6 +140,16 @@
      </rect>
     </property>
    </widget>
+   <widget class="QWidget" name="GoalsWidget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>269</y>
+      <width>851</width>
+      <height>371</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
