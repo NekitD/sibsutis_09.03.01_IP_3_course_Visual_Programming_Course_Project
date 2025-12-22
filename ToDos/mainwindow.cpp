@@ -10,6 +10,7 @@
 #include <QJsonArray>
 #include <QFile>
 #include <QStyledItemDelegate>
+#include <QPainter>
 
 
 class TabsDelegate : public QStyledItemDelegate {
@@ -40,15 +41,56 @@ public:
 
 class FoldersDelegate : public QStyledItemDelegate {
 public:
+    FoldersDelegate(int itemWidth = 200, int itemHeight = 50, QObject* parent = nullptr)
+        : QStyledItemDelegate(parent), width(itemWidth), height(itemHeight) {}
+
     void paint(QPainter* painter,
                const QStyleOptionViewItem& option,
                const QModelIndex& index) const override
     {
+        painter->save();
+
         QStyleOptionViewItem opt = option;
-        opt.font.setPointSize(9);
-        opt.font.setBold(option.state & QStyle::State_Selected);
-        QStyledItemDelegate::paint(painter, opt, index);
+        initStyleOption(&opt, index);
+
+        // Настройки шрифта
+        QFont font = opt.font;
+        font.setPointSize(25);
+        font.setBold(opt.state & QStyle::State_Selected);
+        opt.font = font;
+        opt.displayAlignment = Qt::AlignCenter;
+
+        if (opt.state & QStyle::State_Selected) {
+            painter->fillRect(opt.rect, QColor(232, 208, 121));
+            painter->setPen(QPen(QColor(0, 0, 0), 2));
+            painter->drawRect(opt.rect.adjusted(1, 1, -1, -1));
+        }
+
+        // Рисуем текст
+        painter->setPen(Qt::black);
+        painter->setFont(font);
+        painter->drawText(opt.rect, Qt::AlignCenter, opt.text);
+
+        painter->restore();
     }
+
+    QSize sizeHint(const QStyleOptionViewItem& option,
+                   const QModelIndex& index) const override
+    {
+        Q_UNUSED(option);
+        Q_UNUSED(index);
+        return QSize(width, height);
+    }
+
+    // Для возможности изменения ширины динамически
+    void setItemSize(int newWidth, int newHeight) {
+        width = newWidth;
+        height = newHeight;
+    }
+
+private:
+    int width;
+    int height;
 };
 
 //----------------------------------------------------------------------------------------------------------
@@ -208,7 +250,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->deleteButton->setIcon(QIcon(QString(*mainPathToSource + "\\IMG\\off_trash.png")));
     ui->deleteButton->setIconSize(ui->deleteButton->size() * 0.9);
     ui->deleteButton->setText("");
-    ui->deleteButton->setToolTip("Удалить");
+    ui->deleteButton->setToolTip("Удалить цель");
 
     ui->foldersWidget->setStyleSheet("QWidget{background-color: rgba(232, 203, 168, 1); border: 1px solid black;}");
 
@@ -218,15 +260,38 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->addFolderButton->setText("");
     ui->addFolderButton->setToolTip("Новая папка");
 
+
+
+
+    QString folderStyle = QString(R"(
+                         QListView {
+                             font-size: 14px;
+                             font-family: "Segoe UI";
+                             outline: 0;
+                         }
+
+                         QListView::item {
+                             border: 3px solid black;
+                             padding: 1px;
+                             margin: 0px;
+                             color: black;
+                         }
+                         QListView::item:selected {
+                             background-color: rgba(232, 208, 121, 1);
+                             border: 3px solid black;
+                             font-weight: bold;
+                         }
+                     )");
     QHBoxLayout* foldersLayout = new QHBoxLayout;
     QListView* foldersOutput = new QListView;
+    int itemWidth = 180;
+    FoldersDelegate* delegate = new FoldersDelegate(itemWidth, 35);
+    foldersOutput->setItemDelegate(delegate);
     foldersOutput->setFlow(QListView::LeftToRight);
     foldersOutput->setSpacing(1);
-    foldersOutput->setItemDelegate(new FoldersDelegate);
     FoldersList* foldersModel = importFoldersFromJson();
     foldersOutput->setModel(foldersModel);
     foldersOutput->setCurrentIndex(foldersModel->index(0, 0));
-    foldersOutput->setModel(foldersModel);
     foldersOutput->show();
     foldersLayout->addWidget(foldersOutput, 7);
     foldersLayout->addWidget(ui->addFolderButton, 1);

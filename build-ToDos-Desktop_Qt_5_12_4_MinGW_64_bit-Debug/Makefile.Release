@@ -220,6 +220,25 @@ release/moc_mainwindow.cpp: ../ToDos/mainwindow.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qabstractitemmodel.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QDateTime \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qdatetime.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QSortFilterProxyModel \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qsortfilterproxymodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qabstractproxymodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qregularexpression.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QListView \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qlistview.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractitemview.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractscrollarea.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qframe.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qitemselectionmodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractitemdelegate.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qstyleoption.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractspinbox.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtGui/qvalidator.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qslider.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractslider.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qstyle.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qtabbar.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qrubberband.h \
 		release/moc_predefs.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/bin/moc.exe
 	C:\Qt\Qt5.12.4\5.12.4\mingw73_64\bin\moc.exe $(DEFINES) --include C:/Users/Danik/Desktop/sibsutis_09.03.01_IP_3_course_Visual_Programming_Course_Project/build-ToDos-Desktop_Qt_5_12_4_MinGW_64_bit-Debug/release/moc_predefs.h -IC:/Qt/Qt5.12.4/5.12.4/mingw73_64/mkspecs/win32-g++ -IC:/Users/Danik/Desktop/sibsutis_09.03.01_IP_3_course_Visual_Programming_Course_Project/ToDos -IC:/Qt/Qt5.12.4/5.12.4/mingw73_64/include -IC:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets -IC:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtGui -IC:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtANGLE -IC:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore -I. -IC:/Qt/Qt5.12.4/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++ -IC:/Qt/Qt5.12.4/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/x86_64-w64-mingw32 -IC:/Qt/Qt5.12.4/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/backward -IC:/Qt/Qt5.12.4/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include -IC:/Qt/Qt5.12.4/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include-fixed -IC:/Qt/Qt5.12.4/Tools/mingw730_64/x86_64-w64-mingw32/include ..\ToDos\mainwindow.h -o release\moc_mainwindow.cpp
@@ -361,6 +380,25 @@ release/main.o: ../ToDos/main.cpp ../ToDos/mainwindow.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qabstractitemmodel.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QDateTime \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qdatetime.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QSortFilterProxyModel \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qsortfilterproxymodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qabstractproxymodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qregularexpression.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QListView \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qlistview.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractitemview.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractscrollarea.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qframe.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qitemselectionmodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractitemdelegate.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qstyleoption.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractspinbox.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtGui/qvalidator.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qslider.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractslider.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qstyle.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qtabbar.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qrubberband.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QApplication \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qapplication.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qcoreapplication.h \
@@ -484,6 +522,25 @@ release/mainwindow.o: ../ToDos/mainwindow.cpp ../ToDos/mainwindow.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qabstractitemmodel.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QDateTime \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qdatetime.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QSortFilterProxyModel \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qsortfilterproxymodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qabstractproxymodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qregularexpression.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QListView \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qlistview.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractitemview.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractscrollarea.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qframe.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qitemselectionmodel.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractitemdelegate.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qstyleoption.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractspinbox.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtGui/qvalidator.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qslider.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractslider.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qstyle.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qtabbar.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qrubberband.h \
 		ui_mainwindow.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QVariant \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QApplication \
@@ -495,7 +552,6 @@ release/mainwindow.o: ../ToDos/mainwindow.cpp ../ToDos/mainwindow.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtGui/qinputmethod.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QLineEdit \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qlineedit.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qframe.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtGui/qtextcursor.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtGui/qtextformat.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtGui/qpen.h \
@@ -508,24 +564,29 @@ release/mainwindow.o: ../ToDos/mainwindow.cpp ../ToDos/mainwindow.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qgridlayout.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QLabel \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qlabel.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QListView \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qlistview.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractitemview.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractscrollarea.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qitemselectionmodel.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractitemdelegate.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qstyleoption.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractspinbox.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtGui/qvalidator.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qregularexpression.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qslider.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qabstractslider.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qstyle.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qtabbar.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qrubberband.h \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QDialog \
 		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qdialog.h \
-		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QString
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QString \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QJsonDocument \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qjsondocument.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qjsonvalue.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QJsonObject \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qjsonobject.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QJsonArray \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/qjsonarray.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QFile \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QStyledItemDelegate \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qstyleditemdelegate.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtCore/QDebug \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QInputDialog \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qinputdialog.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QMessageBox \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qmessagebox.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QMenu \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qmenu.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qaction.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/qactiongroup.h \
+		C:/Qt/Qt5.12.4/5.12.4/mingw73_64/include/QtWidgets/QAction
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release\mainwindow.o ..\ToDos\mainwindow.cpp
 
 release/moc_mainwindow.o: release/moc_mainwindow.cpp 
