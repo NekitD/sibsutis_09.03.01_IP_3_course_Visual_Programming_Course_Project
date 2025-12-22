@@ -11,6 +11,9 @@
 #include <QFile>
 #include <QStyledItemDelegate>
 #include <QPainter>
+#include <QTimer>
+#include <QDateTime>
+#include <QLocale>
 
 
 class TabsDelegate : public QStyledItemDelegate {
@@ -22,6 +25,7 @@ public:
         QStyleOptionViewItem opt = option;
         opt.font.setPointSize(14);
         opt.font.setBold(option.state & QStyle::State_Selected);
+        opt.displayAlignment = Qt::AlignCenter;
         QStyledItemDelegate::paint(painter, opt, index);
     }
 };
@@ -35,6 +39,7 @@ public:
         QStyleOptionViewItem opt = option;
         opt.font.setPointSize(12);
         opt.font.setBold(option.state & QStyle::State_Selected);
+        opt.displayAlignment = Qt::AlignCenter;
         QStyledItemDelegate::paint(painter, opt, index);
     }
 };
@@ -110,7 +115,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->HeadWidget->setStyleSheet("QWidget{background-color: rgba(221, 205, 179, 1); border: 3px solid black;}");
 
     n_timeDesk = new TimeDesk(ui->HeadWidget);
-    n_nearEventDesk = new NearEventDesk(ui->HeadWidget);
+    QString goalsJsonPath = *mainPathToSource + "\\DATA\\GOALS.json";
+    n_nearEventDesk = new NearEventDesk(goalsJsonPath, ui->HeadWidget);
     n_noteButton = new QPushButton;
     n_settingsButton = new QPushButton;
     n_aboutButton = new QPushButton;
@@ -347,61 +353,126 @@ TimeDesk::TimeDesk(QWidget *parent):
 {
     setToolTip("Закончить день");
     setStyleSheet("QWidget{background-color: rgba(230, 198, 145, 1); border: 3px solid black; font-size: 24px;}");
-    QVBoxLayout* layout = new QVBoxLayout;
+    QVBoxLayout* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     QLabel* name = new QLabel("Закончить день");
     name->setAlignment(Qt::AlignCenter);
     name->setStyleSheet("QLabel{border: 3px solid black; font-weight: Bold;}");
 
-    QWidget* subwidget = new QWidget;
-    QVBoxLayout* sublayout = new QVBoxLayout;
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(0);
+    QWidget* datetimeWidget = new QWidget;
+    QVBoxLayout* datetimeLayout = new QVBoxLayout;
 
-    QLabel* dateoutput = new QLabel("12 декабря 2025");
-    dateoutput->setAlignment(Qt::AlignCenter);
-    dateoutput->setStyleSheet("QLabel{border: 0px;}");
-    QLabel* timeoutput = new QLabel("16:15");
-    timeoutput->setAlignment(Qt::AlignCenter);
-    timeoutput->setStyleSheet("QLabel{border: 0px; font-weight: Bold;}");
+
+
+    dateLabel = new QLabel;
+    timeLabel = new QLabel;
+    dateLabel->setAlignment(Qt::AlignCenter);
+    timeLabel->setAlignment(Qt::AlignCenter);
+    dateLabel->setStyleSheet("QLabel{border: 0px;}");
+    timeLabel->setStyleSheet("QLabel{border: 0px; font-weight: Bold;}");
     layout->addWidget(name);
-    sublayout->addWidget(dateoutput);
-    sublayout->addWidget(timeoutput);
-    subwidget->setLayout(sublayout);
-    layout->addWidget(subwidget);
-    setLayout(layout);
+    datetimeLayout->addWidget(dateLabel);
+    datetimeLayout->addWidget(timeLabel);
+    datetimeWidget->setLayout(datetimeLayout);
+    layout->addWidget(datetimeWidget);
+    timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, &TimeDesk::updateTime);
+    timer->start(1000); // раз в секунду
+    updateTime();
 }
 
-NearEventDesk::NearEventDesk(QWidget *parent):
-    QWidget(parent)
+void TimeDesk::updateTime()
+{
+    QDateTime now = QDateTime::currentDateTime();
+
+    QLocale ru(QLocale::Russian);
+
+    dateLabel->setText(ru.toString(now.date(), "d MMMM yyyy"));
+    timeLabel->setText(now.time().toString("HH:mm"));
+}
+
+NearEventDesk::NearEventDesk(const QString& jsonPath, QWidget* parent)
+    : QWidget(parent), m_jsonPath(jsonPath)
 {
     setToolTip("Открыть ближайшую цель");
     setStyleSheet("QWidget{background-color: rgba(230, 198, 145, 1); border: 3px solid black; font-size: 24px;}");
-    QVBoxLayout* layout = new QVBoxLayout;
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(0);
-    QLabel* name = new QLabel("Ближайшая цель");
-    name->setAlignment(Qt::AlignCenter);
-    name->setStyleSheet("QLabel{border: 3px solid black; font-weight: Bold;}");
 
-    QWidget* subwidget = new QWidget;
-    QVBoxLayout* sublayout = new QVBoxLayout;
+    auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
 
-    QLabel* datetimeoutput = new QLabel("13 декабря 2025, 9:50");
-    datetimeoutput->setAlignment(Qt::AlignCenter);
-    datetimeoutput->setStyleSheet("QLabel{border: 0px;}");
-    QLabel* goaloutput = new QLabel("Зачет по физре");
-    goaloutput->setAlignment(Qt::AlignCenter);
-    goaloutput->setStyleSheet("QLabel{border: 0px;}");
-    layout->addWidget(name);
-    sublayout->addWidget(goaloutput);
-    sublayout->addWidget(datetimeoutput);
-    subwidget->setLayout(sublayout);
-    layout->addWidget(subwidget);
-    setLayout(layout);
+    QLabel* title = new QLabel("Ближайшая цель");
+    title->setAlignment(Qt::AlignCenter);
+    title->setStyleSheet("QLabel{border: 3px solid black; font-weight: Bold;}");
+
+    goalLabel = new QLabel("—");
+    datetimeLabel = new QLabel("—");
+
+    goalLabel->setAlignment(Qt::AlignCenter);
+    datetimeLabel->setAlignment(Qt::AlignCenter);
+
+    layout->addWidget(title);
+
+
+    QWidget* contentWidget = new QWidget;
+    contentWidget->setStyleSheet("QLabel{border: 0}");
+    QVBoxLayout* contentLayout = new QVBoxLayout;
+    contentLayout->addWidget(goalLabel);
+    contentLayout->addWidget(datetimeLabel);
+    contentWidget->setLayout(contentLayout);
+
+    layout->addWidget(contentWidget);
+
+    auto* timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, &NearEventDesk::updateNearestEvent);
+    timer->start(5000);
+
+    updateNearestEvent();
+}
+
+void NearEventDesk::updateNearestEvent()
+{
+    QFile file(m_jsonPath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return;
+
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    file.close();
+
+    QJsonArray goals = doc.object()["goals"].toArray();
+
+    QDateTime now = QDateTime::currentDateTime();
+    QDateTime nearest;
+    QString nearestName;
+
+    for (const QJsonValue& val : goals) {
+        QJsonObject obj = val.toObject();
+
+        QString deadlineStr = obj["deadline"].toString();
+        if (deadlineStr.isEmpty())
+            continue;
+
+        QDateTime deadline =
+            QDateTime::fromString(deadlineStr, Qt::ISODate);
+
+        if (!deadline.isValid())
+            continue;
+
+        if (deadline > now &&
+            (!nearest.isValid() || deadline < nearest)) {
+            nearest = deadline;
+            nearestName = obj["name"].toString();
+        }
+    }
+
+    if (nearest.isValid()) {
+        goalLabel->setText(nearestName);
+        datetimeLabel->setText(nearest.toString("dd MMMM yyyy, HH:mm"));
+    } else {
+        goalLabel->setText("Нет ближайших целей");
+        datetimeLabel->setText("");
+    }
 }
 
 void MainWindow::openAddFolder()
@@ -642,3 +713,24 @@ FoldersList* MainWindow::importFoldersFromJson(){
 }
 
 
+Goal* GoalsList::nearestGoal(const QDateTime& now) const
+{
+    Goal* nearest = nullptr;
+    qint64 minDiff = LLONG_MAX;
+
+    for (auto* item : m_items) {
+        auto* goal = dynamic_cast<Goal*>(item);
+        if (!goal)
+            continue;
+
+        if (!goal->deadline.isValid())
+            continue;
+
+        qint64 diff = now.secsTo(goal->deadline);
+        if (diff >= 0 && diff < minDiff) {
+            minDiff = diff;
+            nearest = goal;
+        }
+    }
+    return nearest;
+}

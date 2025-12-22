@@ -1,5 +1,16 @@
 {
    "goals": [
-    
+        {
+            "id": "kur",
+            "name": "Курсовая",
+            "description": "Код доделать",
+            "type": "simple",
+            "current": 0,
+            "target": 0,
+            "subgoalIds": [],
+            "deadline": "2025-12-26T10:00:00",
+            "tagIds": [],
+            "folderId": "folder_0"
+        }
     ]
 }

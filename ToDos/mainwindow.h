@@ -6,6 +6,7 @@
 #include <QAbstractItemModel>
 #include <QDateTime>
 #include <QSortFilterProxyModel>
+#include <QLabel>
 
 
 namespace Ui {
@@ -73,6 +74,10 @@ private:
     QPushButton* n_settingsButton;
     QPushButton* n_aboutButton;
 
+    QDateTime* currentDatetime;
+    QDate* currentDate;
+    QTime* currentTime;
+
     TabsList* importTabsFromJson();
     TagsList* importTagsFromJson();
     FoldersList* importFoldersFromJson();
@@ -90,16 +95,29 @@ class TimeDesk : public QWidget
     Q_OBJECT
 public:
     explicit TimeDesk(QWidget *parent = nullptr);
+
+private slots:
+    void updateTime();
+
 private:
-    QString* datetimeOutput;
+    QLabel* dateLabel;
+    QLabel* timeLabel;
+    QTimer* timer;
 };
 
 class NearEventDesk : public QWidget
 {
     Q_OBJECT
 public:
-    explicit NearEventDesk(QWidget *parent = nullptr);
+    explicit NearEventDesk(const QString& jsonPath, QWidget* parent = nullptr);
 
+private slots:
+    void updateNearestEvent();
+
+private:
+    QString m_jsonPath;
+    QLabel* goalLabel;
+    QLabel* datetimeLabel;
 };
 
 
@@ -185,6 +203,8 @@ public:
 class GoalsList : public ChoosableObjectsList{
 public:
     QVariant data(const QModelIndex& index, int role) const override;
+    Goal* nearestGoal(const QDateTime& now) const;
+
 };
 
 class GoalsFilterModel : public QSortFilterProxyModel
