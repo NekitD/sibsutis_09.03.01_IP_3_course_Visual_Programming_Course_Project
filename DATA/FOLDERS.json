@@ -1,5 +1,5 @@
-{ 
-    "folders":  [
+{
+    "folders": [
         {
             "id": "folder_0",
             "name": "Все"
@@ -7,6 +7,10 @@
         {
             "id": "folder_1",
             "name": "Учёба"
+        },
+        {
+            "id": "ba0cd82e-9647-456f-bb45-9972c91d49dd",
+            "name": "Здоровье"
         }
     ]
 }

@@ -7,6 +7,7 @@
 #include <QDateTime>
 #include <QSortFilterProxyModel>
 #include <QLabel>
+#include <QListView>
 
 
 namespace Ui {
@@ -68,6 +69,7 @@ private:
 
     Ui::MainWindow *ui;
     QString* mainPathToSource;
+    QString foldersJsonPath;
     TimeDesk* n_timeDesk;
     NearEventDesk* n_nearEventDesk;
     QPushButton* n_noteButton;
@@ -78,13 +80,17 @@ private:
     QDate* currentDate;
     QTime* currentTime;
 
+    FoldersList* foldersModel;
+    QListView* foldersOutput;
+
     TabsList* importTabsFromJson();
     TagsList* importTagsFromJson();
     FoldersList* importFoldersFromJson();
+    void saveFoldersToJson();
 
 
 private slots:
-    void openAddFolder();
+    void openFolder(bool newness);
 
 
 };
@@ -170,15 +176,21 @@ class ChoosableObjectsList : public QAbstractListModel
     Q_OBJECT
 public:
     explicit ChoosableObjectsList(QObject* parent = nullptr);
+
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role) const override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;
+
     void select(int row);
     void add(ChoosableObject* item);
+    void removeAt(int row);
+
+    QVector<ChoosableObject*> items() const { return m_items; }
 
 protected:
     QVector<ChoosableObject*> m_items;
 };
+
 
 
 class FoldersList : public ChoosableObjectsList

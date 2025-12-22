@@ -14,6 +14,7 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QLocale>
+#include <QUuid>
 
 
 class TabsDelegate : public QStyledItemDelegate {
@@ -266,9 +267,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->addFolderButton->setText("");
     ui->addFolderButton->setToolTip("Новая папка");
 
-
-
-
     QString folderStyle = QString(R"(
                          QListView {
                              font-size: 14px;
@@ -295,7 +293,7 @@ MainWindow::MainWindow(QWidget *parent) :
     foldersOutput->setItemDelegate(delegate);
     foldersOutput->setFlow(QListView::LeftToRight);
     foldersOutput->setSpacing(1);
-    FoldersList* foldersModel = importFoldersFromJson();
+    foldersModel = importFoldersFromJson();
     foldersOutput->setModel(foldersModel);
     foldersOutput->setCurrentIndex(foldersModel->index(0, 0));
     foldersOutput->show();
@@ -304,8 +302,9 @@ MainWindow::MainWindow(QWidget *parent) :
     foldersLayout->setContentsMargins(0, 0, 0, 0);
     foldersLayout->setSpacing(0);
     ui->foldersWidget->setLayout(foldersLayout);
+    foldersJsonPath = *mainPathToSource + "\\DATA\\FOLDERS.json";
 
-    connect(ui->addFolderButton, &QPushButton::clicked, this, &MainWindow::openAddFolder);
+    connect(ui->addFolderButton, &QPushButton::clicked, this, &MainWindow::openFolder);
 
     tabsOutput->setSelectionMode(QAbstractItemView::SingleSelection);
     tagsOutput->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -348,6 +347,33 @@ MainWindow::~MainWindow()
 }
 
 
+void MainWindow::saveFoldersToJson()
+{
+    QJsonArray array;
+
+    for (auto* obj : foldersModel->items()) {
+        Folder* folder = static_cast<Folder*>(obj);
+
+        QJsonObject o;
+        o["id"] = folder->id;
+        o["name"] = folder->name;
+
+        array.append(o);
+    }
+
+    QJsonObject root;
+    root["folders"] = array;
+
+    QFile file(foldersJsonPath);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+        file.close();
+    }
+}
+
+
+
+//-----------------------------------------------------------------------------------------------------------------
 TimeDesk::TimeDesk(QWidget *parent):
     QWidget(parent)
 {
@@ -475,7 +501,7 @@ void NearEventDesk::updateNearestEvent()
     }
 }
 
-void MainWindow::openAddFolder()
+void MainWindow::openFolder(bool newness)
 {
     QDialog* editFolderWindow = new QDialog;
     editFolderWindow->setModal(true);
@@ -488,7 +514,7 @@ void MainWindow::openAddFolder()
     layout->addWidget(name);
     QLineEdit* text = new QLineEdit;
     text->setStyleSheet("QLineEdit{background-color: rgba(236, 243, 246, 1); border: 2px solid black; font-size: 35px;}");
-    text->setPlaceholderText("Новая папка");
+    text->setPlaceholderText(text->text());
     layout->addWidget(text);
     QWidget* buttons = new QWidget;
     QHBoxLayout* buttonsLayout = new QHBoxLayout;
@@ -496,9 +522,27 @@ void MainWindow::openAddFolder()
     QPushButton* save = new QPushButton("Сохранить");
     save->setStyleSheet("QPushButton{background-color: rgba(199, 229, 197, 1); font-size: 25px;}");
     QPushButton* cancel = new QPushButton("Отмена");
-    cancel->setStyleSheet("QPushButton{background-color: rgba(223, 192, 192, 1); font-size: 25px;}");
+    cancel->setStyleSheet("QPushButton{background-color: rgba(220, 224, 220, 0.94); font-size: 25px;}");
     buttonsLayout->addWidget(horspacer);
     buttonsLayout->addWidget(save);
+
+
+    if(newness){
+        editFolderWindow->setWindowTitle("Новая папка");
+    } else {
+        QPushButton* del = new QPushButton("Удалить");
+        del->setStyleSheet("QPushButton{background-color: rgba(223, 192, 192, 1); font-size: 25px;}");
+        connect(ui->deleteButton, &QPushButton::clicked, this, [=]() {
+            QModelIndex idx = foldersOutput->currentIndex();
+            if (!idx.isValid())
+                return;
+
+            foldersModel->removeAt(idx.row());
+            saveFoldersToJson();
+        });
+    }
+
+
     buttonsLayout->addWidget(cancel);
     buttons->setLayout(buttonsLayout);
     layout->addWidget(buttons);
@@ -506,8 +550,22 @@ void MainWindow::openAddFolder()
     editFolderWindow->setWindowTitle("Новая папка");
     editFolderWindow->setWindowIcon(QIcon(QString(*mainPathToSource + "\\IMG\\folder.png")));
     editFolderWindow->setVisible(true);
+
     connect(cancel, &QPushButton::clicked, [editFolderWindow](){editFolderWindow->close();});
-    connect(save, &QPushButton::clicked, [editFolderWindow](){editFolderWindow->close();});
+    connect(save, &QPushButton::clicked, this, [=]() {
+        QString nameText = text->text().trimmed();
+        if (nameText.isEmpty())
+            return;
+
+        Folder* folder = new Folder;
+        folder->id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        folder->name = nameText;
+
+        foldersModel->add(folder);
+        saveFoldersToJson();
+
+        editFolderWindow->close();
+    });
 }
 
 //------------------DATA---------------------------------------------------------------------------------
@@ -565,6 +623,17 @@ void ChoosableObjectsList::add(ChoosableObject* item)
     endInsertRows();
 }
 
+
+void ChoosableObjectsList::removeAt(int row)
+{
+    if (row < 0 || row >= m_items.size())
+        return;
+
+    beginRemoveRows(QModelIndex(), row, row);
+    delete m_items[row];
+    m_items.removeAt(row);
+    endRemoveRows();
+}
 
 
 QVariant TagsList::data(const QModelIndex& index, int role) const{
