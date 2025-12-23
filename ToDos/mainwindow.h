@@ -9,6 +9,7 @@
 #include <QLabel>
 #include <QListView>
 #include <QStyledItemDelegate>
+#include <QStackedWidget>
 
 
 namespace Ui {
@@ -32,6 +33,8 @@ class GoalsList;
 
 class GoalsFilterModel;
 class GoalsTableModel;
+
+class Notification;
 
 
 enum Columns {
@@ -69,6 +72,12 @@ enum GoalsRoles {
 };
 
 
+struct AppSettings {
+    QString theme;
+    QString output;
+};
+
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -100,11 +109,56 @@ private:
     FoldersList* importFoldersFromJson();
     QVector<Goal*> importGoalsFromJson();
     void saveFoldersToJson();
+    void saveGoalsToJson();
+
+
+
+    QStackedWidget* goalsStack;
+
+    bool m_todayOnly = false;
+
+    QWidget* todayPage;
+    QWidget* incomingPage;
+    QWidget* calendarPage;
+    QWidget* kanbanPage;
+
+    GoalsTableModel* goalsModel;
+    GoalsFilterModel* goalsFilter;
+
+    QWidget* createIncomingPage();
+    QWidget* createTodayPage();
+    QWidget* createKanbanColumn(const QString& tagName);
+    QWidget* createCalendarPage();
+    QWidget* createKanbanPage();
+    void onTabChanged(const QString& tabId);
+
+    void showNotificationsMenu();
+    QList<Notification> notifications;
+    void loadNotifications();
+    void markNotificationAsRead(const QString& id);
+    void clearAllNotifications();
+    void updateNotificationButtonIcon();
+
+    void showFilterMenu();
+    void applyFilters(const QStringList& filters);
+
+    AppSettings loadSettings();
+    void saveSettings(const AppSettings& settings);
+    void applySettings(const AppSettings& settings);
+    AppSettings currentSettings;
+    void openSettings();
+
+    QPushButton* addGoalButton = nullptr;
 
 
 
 private slots:
     void openFolder(bool newness);
+    void openAbout();
+    void openNearGoal();
+    void endDay();
+    void openAddGoal();
+    void openCreateGoalDialog();
 
 
 };
@@ -233,23 +287,25 @@ public:
 
 };
 
-class GoalsFilterModel : public QSortFilterProxyModel
-{
+class GoalsFilterModel : public QSortFilterProxyModel {
     Q_OBJECT
 public:
     explicit GoalsFilterModel(QObject* parent = nullptr);
 
-    void setCurrentTab(const QString& tabId);
-    void setCurrentTag(const QString& tagId);
-    void setCurrentFolder(const QString& folderId);
+    void setTodayOnly(bool on);
+    void setTagFilter(const QString& tagId);
+    void setFolderFilter(const QString& folderId);
+    void setDateFilter(const QDate& date);
 
 protected:
-    bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const override;
+    bool filterAcceptsRow(int row,
+                          const QModelIndex& parent) const override;
 
 private:
-    QString m_tabId;
+    bool m_todayOnly = false;
     QString m_tagId;
     QString m_folderId;
+    QDate m_date;
 };
 
 class GoalsTableModel : public QAbstractTableModel {
@@ -262,9 +318,17 @@ public:
     QVariant data(const QModelIndex& index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
-    void setGoals(const QVector<Goal*>& goals);
+    const QVector<Goal*>& goals() const;
 
-private:
+    void setGoals(const QVector<Goal*>& goals);
+    void addGoal(Goal* g);
+
+    enum {
+        TagRole = Qt::UserRole + 1,
+        DeadlineRole,
+        FolderRole
+    };
+
     QVector<Goal*> m_goals;
 };
 
@@ -279,6 +343,15 @@ public:
 
     QSize sizeHint(const QStyleOptionViewItem& option,
                    const QModelIndex& index) const override;
+};
+
+
+class Notification {
+public:
+    QString id;
+    QString text;
+    QDateTime time;
+    bool read = false;
 };
 
 #endif // MAINWINDOW_H
