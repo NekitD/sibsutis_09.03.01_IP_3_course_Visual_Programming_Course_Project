@@ -464,10 +464,10 @@ QWidget* MainWindow::createIncomingPage()
                 border: 3px solid black;
                 font-size: 16px;
                 selection-background-color: rgba(255, 230, 160, 1);
-                padding-top: 3px;
-                padding-bottom: 6px;
-                padding-left: 5px;
-                padding-right: 5px;
+                padding-top: 0px;
+                padding-bottom: 0px;
+                padding-left: 0px;
+                padding-right: 0px;
             }
 
             QTableView::item {
@@ -483,10 +483,11 @@ QWidget* MainWindow::createIncomingPage()
         view->horizontalHeader()->setStyleSheet(R"(
             QHeaderView::section {
                 background-color: rgba(247, 232, 179, 1);
-                border: 2px solid black;
+                border: 0px solid black;
                 font-size: 24px;
                 font-weight: bold;
-                padding: 6px;
+                padding: 1px;
+                font-style: italic;
             }
         )");
 
@@ -510,14 +511,10 @@ QWidget* MainWindow::createTodayPage()
     view->setFocusPolicy(Qt::NoFocus);
 
     goalsFilter->setTodayOnly(true);
-    goalsFilter->setDateFilter(QDate());
-    goalsFilter->setTagFilter("");
 
     auto* filter = new GoalsFilterModel(view);
     filter->setSourceModel(goalsModel);
     filter->setTodayOnly(true);
-    filter->setDateFilter(QDate());
-    filter->setTagFilter("");
 
     view->setModel(filter);
     view->setItemDelegate(new GoalsDelegate(view));
@@ -527,10 +524,10 @@ QWidget* MainWindow::createTodayPage()
                 border: 3px solid black;
                 font-size: 16px;
                 selection-background-color: rgba(255, 230, 160, 1);
-                                 padding-top: 3px;
-                                 padding-bottom: 6px;
-                                 padding-left: 5px;
-                                 padding-right: 5px;
+                padding-top: 0px;
+                padding-bottom: 0px;
+                padding-left: 0px;
+                padding-right: 0px;
             }
 
             QTableView::item {
@@ -546,10 +543,11 @@ QWidget* MainWindow::createTodayPage()
         view->horizontalHeader()->setStyleSheet(R"(
             QHeaderView::section {
                 background-color: rgba(247, 232, 179, 1);
-                border: 2px solid black;
+                border: 0px solid black;
                 font-size: 24px;
                 font-weight: bold;
-                padding: 6px;
+                padding: 1px;
+                font-style: italic;
             }
         )");
 
