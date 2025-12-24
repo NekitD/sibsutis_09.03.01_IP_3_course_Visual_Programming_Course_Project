@@ -45,6 +45,21 @@
             ],
             "target": 0,
             "type": "simple"
+        },
+        {
+            "current": 1000,
+            "deadline": "2025-12-25T01:41:33",
+            "description": "что-то\nЕдиницы измерения: рублей",
+            "folderId": "folder_1",
+            "id": "861db5b0-34a9-4b4b-b3d6-c519169bf963",
+            "name": "Копим",
+            "subgoalIds": [
+            ],
+            "tagIds": [
+                "Выполнено"
+            ],
+            "target": 1000,
+            "type": "accumulation"
         }
     ]
 }

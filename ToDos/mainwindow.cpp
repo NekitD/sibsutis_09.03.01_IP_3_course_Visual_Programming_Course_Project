@@ -2999,46 +2999,6 @@ void MainWindow::deleteSelectedGoal()
     }
 }
 
-//bool MainWindow::deleteGoalById(const QString& goalId)
-//{
-//    // Находим и удаляем цель
-//    for (int i = 0; i < allGoals.size(); ++i) {
-//        if (allGoals[i]->id == goalId) {
-//            Goal* goal = allGoals[i];
-
-//            // Сначала удаляем дочерние цели (если есть)
-//            if (!goal->subgoalIds.isEmpty()) {
-//                // Спрашиваем о дочерних целях
-//                QMessageBox::StandardButton reply;
-//                reply = QMessageBox::question(this, "Дочерние цели",
-//                                             "У этой цели есть дочерние цели. "
-//                                             "Удалить их тоже?",
-//                                             QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
-
-//                if (reply == QMessageBox::Cancel) {
-//                    return false;
-//                } else if (reply == QMessageBox::Yes) {
-//                    deleteSubgoals(goal->subgoalIds);
-//                }
-//                // Если No - просто удаляем родительскую цель
-//            }
-
-//            // Удаляем цель из всех моделей
-//            if (todayModel) todayModel->removeGoal(goalId);
-//            if (incomingModel) incomingModel->removeGoal(goalId);
-//            if (calendarModel) calendarModel->removeGoal(goalId);
-
-//            // Удаляем из основного списка
-//            delete allGoals[i];  // Освобождаем память
-//            allGoals.removeAt(i);
-
-//            return true;
-//        }
-//    }
-
-//    return false;
-//}
-
 bool MainWindow::deleteGoalById(const QString& goalId)
 {
     // Находим цель в основном списке
@@ -3308,6 +3268,23 @@ void MainWindow::markGoalAsCompleted(const QString& goalId)
     QMessageBox::information(this, "Успех", "Цель отмечена как выполненная");
 }
 
+//void MainWindow::openEditGoal(const QString& goalId)
+//{
+//    Goal* goalToEdit = findGoalById(goalId);
+//    if (!goalToEdit) {
+//        QMessageBox::warning(this, "Ошибка", "Цель не найдена");
+//        return;
+//    }
+
+//    GoalEdit dlg(this, false, mainPathToSource, goalToEdit);
+
+//    if (dlg.exec() == QDialog::Accepted) {
+//        // Цель обновляется через указатель в диалоге
+//        saveGoalsToJson();
+//        updateAllModels();
+//    }
+//}
+
 void MainWindow::openEditGoal(const QString& goalId)
 {
     Goal* goalToEdit = findGoalById(goalId);
@@ -3316,12 +3293,19 @@ void MainWindow::openEditGoal(const QString& goalId)
         return;
     }
 
+    // Создаем диалог с указателем на цель
     GoalEdit dlg(this, false, mainPathToSource, goalToEdit);
 
     if (dlg.exec() == QDialog::Accepted) {
-        // Цель обновляется через указатель в диалоге
+        // Цель уже обновлена через указатель в диалоге
+
+        // Принудительно сохраняем в JSON
         saveGoalsToJson();
+
+        // Обновляем все модели
         updateAllModels();
+
+        QMessageBox::information(this, "Сохранено", "Изменения сохранены");
     }
 }
 
@@ -3332,5 +3316,23 @@ void MainWindow::dataChangedForAllModels()
 
     // Можно также эмитировать кастомный сигнал, если нужно
     emit modelsDataChanged();
+}
+
+void NearEventDesk::mousePressEvent(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton) {
+        // Проверяем, есть ли ближайшая цель
+        if (!m_nearestGoalId.isEmpty()) {
+            qDebug() << "Клик по ближайшей цели:" << m_nearestGoalName << "ID:" << m_nearestGoalId;
+
+            // Отправляем сигнал с ID цели
+            emit nearestGoalClicked(m_nearestGoalId);
+        } else {
+            qDebug() << "Нет ближайших целей для открытия";
+        }
+    }
+
+    // Вызываем родительский метод
+    QWidget::mousePressEvent(event);
 }
 

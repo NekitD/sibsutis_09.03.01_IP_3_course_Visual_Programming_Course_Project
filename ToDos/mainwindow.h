@@ -194,6 +194,7 @@ class NearEventDesk : public QWidget
     Q_OBJECT
 public:
     explicit NearEventDesk(const QString& jsonPath, QWidget* parent = nullptr);
+    void mousePressEvent(QMouseEvent* event);
 
 private slots:
     void updateNearestEvent();
