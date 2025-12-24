@@ -148,6 +148,15 @@ private:
     void onSingleClick();
     void clearCurrentSelection(const QString& goalId);
 
+    void setupContextMenuForViews();
+    void showContextMenu(const QPoint& pos);
+
+    Goal* findGoalById(const QString& goalId);
+
+    void markGoalAsCompleted(const QString& goalId);
+
+    void openEditGoal(const QString& goalId);
+
 private slots:
     void openFolder(bool newness);
     void openAbout();

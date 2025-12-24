@@ -410,6 +410,8 @@ MainWindow::MainWindow(QWidget *parent) :
             clickTimer->setSingleShot(true);
             clickTimer->setInterval(250); // 250 мс для двойного клика
             connect(clickTimer, &QTimer::timeout, this, &MainWindow::onSingleClick);
+
+            setupContextMenuForViews();
 }
 
 
@@ -429,15 +431,70 @@ MainWindow::~MainWindow()
 }
 
 
+//void MainWindow::openAddGoal(bool newness)
+//{
+//    GoalEdit dlg(this, newness, mainPathToSource);
+//    dlg.setModal(true);
+//    dlg.exec();
+
+//    // позже тут:
+//    // if (dlg.result() == QDialog::Accepted)
+//    //    перечитать GOALS.json и обновить модель
+//}
+
+//void MainWindow::openAddGoal(bool newness)
+//{
+//    GoalEdit dlg(this, newness, mainPathToSource, nullptr); // Новая цель
+
+//    if (dlg.exec() == QDialog::Accepted) {
+//        Goal* goal = dlg.createGoal();
+
+//        // Проверяем, нет ли уже цели с таким ID
+//        bool goalExists = false;
+//        for (Goal* existingGoal : allGoals) {
+//            if (existingGoal->id == goal->id) {
+//                // Обновляем существующую цель
+//                *existingGoal = *goal;
+//                goalExists = true;
+//                delete goal; // Удаляем временный объект
+//                goal = existingGoal;
+//                break;
+//            }
+//        }
+
+//        if (!goalExists) {
+//            // Добавляем новую цель
+//            allGoals.append(goal);
+//        }
+
+//        // Сохраняем в JSON
+//        saveGoalsToJson();
+
+//        // Обновляем модели
+//        updateAllModels();
+//    }
+//}
+
 void MainWindow::openAddGoal(bool newness)
 {
-    GoalEdit dlg(this, newness, mainPathToSource);
-    dlg.setModal(true);
-    dlg.exec();
+    GoalEdit dlg(this, newness, mainPathToSource, nullptr);
 
-    // позже тут:
-    // if (dlg.result() == QDialog::Accepted)
-    //    перечитать GOALS.json и обновить модель
+    if (dlg.exec() == QDialog::Accepted) {
+        Goal* goal = dlg.createGoal();
+
+        if (newness) {
+            // Новая цель - добавляем
+            allGoals.append(goal);
+        } else {
+            // Редактирование существующей - цель уже обновлена через указатель
+        }
+
+        // Сохраняем в JSON
+        saveGoalsToJson();
+
+        // Обновляем модели
+        updateAllModels();
+    }
 }
 
 
@@ -3018,3 +3075,192 @@ void MainWindow::clearAllSelections()
     selectedGoalId.clear();
     updateDeleteButtonState();
 }
+
+void MainWindow::setupContextMenuForViews()
+{
+    // Для табличного представления (todayView и incomingView)
+    if (todayView) {
+        todayView->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(todayView, &QTableView::customContextMenuRequested,
+                this, &MainWindow::showContextMenu);
+    }
+
+    if (incomingView) {
+        incomingView->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(incomingView, &QTableView::customContextMenuRequested,
+                this, &MainWindow::showContextMenu);
+    }
+
+    // Для списка календаря
+    if (calendarList) {
+        calendarList->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(calendarList, &QListView::customContextMenuRequested,
+                this, &MainWindow::showContextMenu);
+    }
+
+    // Для представлений канбана
+    if (receivedView) {
+        receivedView->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(receivedView, &QListView::customContextMenuRequested,
+                this, &MainWindow::showContextMenu);
+    }
+
+    if (inProgressView) {
+        inProgressView->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(inProgressView, &QListView::customContextMenuRequested,
+                this, &MainWindow::showContextMenu);
+    }
+
+    if (doneView) {
+        doneView->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(doneView, &QListView::customContextMenuRequested,
+                this, &MainWindow::showContextMenu);
+    }
+}
+
+void MainWindow::showContextMenu(const QPoint& pos)
+{
+    // Определяем, из какого виджета пришел сигнал
+    QWidget* widget = qobject_cast<QWidget*>(sender());
+    if (!widget) return;
+
+    // Получаем индекс под курсором мыши
+    QModelIndex index;
+    if (auto* tableView = qobject_cast<QTableView*>(widget)) {
+        index = tableView->indexAt(pos);
+    } else if (auto* listView = qobject_cast<QListView*>(widget)) {
+        index = listView->indexAt(pos);
+    }
+
+    if (!index.isValid()) return;
+
+    // Получаем ID цели
+    QVariant idVar = index.data(GoalsTableModel::IdRole);
+    if (!idVar.isValid()) return;
+
+    QString goalId = idVar.toString();
+    Goal* goal = findGoalById(goalId);
+    if (!goal) return;
+
+    // Создаем контекстное меню
+    QMenu menu(this);
+
+    // Стилизация меню
+    menu.setStyleSheet(R"(
+        QMenu {
+            background-color: white;
+            border: 2px solid #2196F3;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        QMenu::item {
+            padding: 10px 25px;
+            font-size: 16px;
+            color: #333;
+            border-radius: 3px;
+        }
+        QMenu::item:selected {
+            background-color: #E3F2FD;
+            color: #1976D2;
+        }
+        QMenu::separator {
+            height: 1px;
+            background-color: #E0E0E0;
+            margin: 5px 0;
+        }
+    )");
+
+    // Пункт "Изменить"
+    QAction* editAction = menu.addAction("✏️ Изменить");
+    editAction->setIcon(QIcon(QString(*mainPathToSource + "\\IMG\\edit.png")));
+
+    // Пункт "Выполнить"
+    QAction* completeAction = menu.addAction("✅ Выполнить");
+    completeAction->setIcon(QIcon(QString(*mainPathToSource + "\\IMG\\complete.png")));
+
+    menu.addSeparator();
+
+    // Пункт "Удалить"
+    QAction* deleteAction = menu.addAction("🗑️ Удалить");
+    deleteAction->setIcon(QIcon(QString(*mainPathToSource + "\\IMG\\delete.png")));
+
+    // Подключаем действия
+    connect(editAction, &QAction::triggered, this, [this, goalId]() {
+    openEditGoal(goalId);
+    });
+
+    connect(completeAction, &QAction::triggered, this, [this, goalId]() {
+        markGoalAsCompleted(goalId);
+    });
+
+    connect(deleteAction, &QAction::triggered, this, [this, goalId]() {
+        deleteGoalById(goalId);
+    });
+
+    // Показываем меню
+    menu.exec(widget->mapToGlobal(pos));
+}
+
+Goal* MainWindow::findGoalById(const QString& goalId)
+{
+    for (Goal* goal : allGoals) {
+        if (goal->id == goalId) {
+            return goal;
+        }
+    }
+    return nullptr;
+}
+
+void MainWindow::markGoalAsCompleted(const QString& goalId)
+{
+    Goal* goal = findGoalById(goalId);
+    if (!goal) {
+        QMessageBox::warning(this, "Ошибка", "Цель не найдена");
+        return;
+    }
+
+    // Спрашиваем подтверждение
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this,
+        "Выполнение цели",
+        QString("Отметить цель \"%1\" как выполненную?").arg(goal->name),
+        QMessageBox::Yes | QMessageBox::No
+    );
+
+    if (reply != QMessageBox::Yes) {
+        return;
+    }
+
+    // Удаляем все текущие тэги и добавляем "Выполнено"
+    goal->tagIds.clear();
+    goal->tagIds.append("Выполнено");
+
+    // Если цель типа "Накопление", устанавливаем прогресс на 100%
+    if (goal->type == "accumulation" && goal->target > 0) {
+        goal->current = goal->target;
+    }
+
+    // Сохраняем изменения
+    saveGoalsToJson();
+    updateAllModels();
+
+    QMessageBox::information(this, "Успех", "Цель отмечена как выполненная");
+}
+
+void MainWindow::openEditGoal(const QString& goalId)
+{
+    Goal* goalToEdit = findGoalById(goalId);
+    if (!goalToEdit) {
+        QMessageBox::warning(this, "Ошибка", "Цель не найдена");
+        return;
+    }
+
+    GoalEdit dlg(this, false, mainPathToSource, goalToEdit);
+
+    if (dlg.exec() == QDialog::Accepted) {
+        // Цель обновляется через указатель в диалоге
+        saveGoalsToJson();
+        updateAllModels();
+    }
+}
+

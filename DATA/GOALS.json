@@ -10,7 +10,7 @@
             "subgoalIds": [
             ],
             "tagIds": [
-                "В работе"
+                "Выполнено"
             ],
             "target": 0,
             "type": "simple"
@@ -28,7 +28,37 @@
                 "В работе"
             ],
             "target": 0,
-            "type": "multi"
+            "type": "composite"
+        },
+        {
+            "current": 0,
+            "deadline": "2025-12-26T01:25:30",
+            "description": "У меня всё на 5 закрыто, осталась курсовая",
+            "folderId": "folder_1",
+            "id": "0be27a38-8641-4c76-bab4-acf8b0ba4af5",
+            "name": "Закрыть сессию",
+            "subgoalIds": [
+            ],
+            "tagIds": [
+                "Важно",
+                "Срочно"
+            ],
+            "target": 0,
+            "type": "simple"
+        },
+        {
+            "current": 0,
+            "deadline": "",
+            "description": "пкып",
+            "folderId": "folder_1",
+            "id": "2617c811-ffb1-4efd-a5b0-b46912470f24",
+            "name": "рв",
+            "subgoalIds": [
+            ],
+            "tagIds": [
+            ],
+            "target": 0,
+            "type": "simple"
         }
     ]
 }
