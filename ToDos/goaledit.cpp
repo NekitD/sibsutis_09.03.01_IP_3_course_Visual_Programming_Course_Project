@@ -40,7 +40,6 @@ GoalEdit::GoalEdit(QWidget *parent, bool newness, QString* mainPathToSource, Goa
     QWidget* radioW = new QWidget;
     QHBoxLayout* radioL = new QHBoxLayout;
 
-    // Устанавливаем имена для радиокнопок для удобства поиска
     radioL->addWidget(ui->radioButton);
     radioL->addWidget(ui->radioButton_2);
     radioL->addWidget(ui->radioButton_3);
@@ -129,7 +128,6 @@ GoalEdit::GoalEdit(QWidget *parent, bool newness, QString* mainPathToSource, Goa
         if (on) { currentType = Composite; updateTypeUI(); }
     });
 
-    // Кнопки дедлайна и тэгов
 
     ui->deadlineButton->setStyleSheet(R"(
         QPushButton {
@@ -164,28 +162,21 @@ GoalEdit::GoalEdit(QWidget *parent, bool newness, QString* mainPathToSource, Goa
     )");
     ui->tagsButton->setText("Выбрать тэги");
 
-    // Устанавливаем иконки
     ui->deadlineButton->setIcon(QIcon(QString(*mainPathToSource + "\\calendar.png")));
     ui->tagsButton->setIcon(QIcon(QString(*mainPathToSource + "\\hashtag.svg")));
     ui->deadlineButton->setIconSize(QSize(32, 32));
     ui->tagsButton->setIconSize(QSize(32, 32));
 
-    // Создаем StackedWidget для типов целей
     typeStack = new QStackedWidget(this);
     typeStack->setObjectName("typeStack");
 
-    // Создаем виджеты для каждого типа
     createSimpleWidget();
     createAccumWidget();
     createCompositeWidget();
 
-    // Добавляем виджеты в стек
     typeStack->addWidget(simpleWidget);
     typeStack->addWidget(accumWidget);
     typeStack->addWidget(compositeWidget);
-
-    // Вставляем StackedWidget в нужное место layout
-    //insertTypeStack();
 
     mainLayout->addWidget(typeStack);
     mainLayout->addWidget(ui->label_4);
@@ -193,7 +184,6 @@ GoalEdit::GoalEdit(QWidget *parent, bool newness, QString* mainPathToSource, Goa
     mainLayout->addWidget(ui->label_5);
     mainLayout->addWidget(ui->tagsButton);
 
-    // Подключаем обработчики событий
     connect(ui->deadlineButton, &QPushButton::clicked, this, [=]() {
         QDateTime dt = QDateTime::currentDateTime();
 
@@ -274,7 +264,6 @@ GoalEdit::GoalEdit(QWidget *parent, bool newness, QString* mainPathToSource, Goa
     });
 
     mainLayout->addWidget(ui->buttonBox);
-    // Инициализируем UI с текущим типом
     updateTypeUI();
 
     setLayout(mainLayout);
@@ -299,7 +288,6 @@ void GoalEdit::createSimpleWidget()
     QVBoxLayout* layout = new QVBoxLayout(simpleWidget);
     layout->setContentsMargins(0, 10, 0, 10);
 
-    // Простая цель не имеет дополнительных полей
     QLabel* infoLabel = new QLabel("Простая цель - без дополнительных параметров");
     infoLabel->setStyleSheet(R"(
         QLabel {
@@ -321,7 +309,6 @@ void GoalEdit::createAccumWidget()
     accumLayout->setContentsMargins(0, 10, 0, 10);
     accumLayout->setSpacing(15);
 
-    // Первая строка: цель и единицы измерения
     QWidget* targetWidget = new QWidget;
     QHBoxLayout* targetLayout = new QHBoxLayout(targetWidget);
     targetLayout->setContentsMargins(0, 0, 0, 0);
@@ -366,7 +353,6 @@ void GoalEdit::createAccumWidget()
     targetLayout->addWidget(tar_valueLine, 2);
     targetLayout->addWidget(unitLineEdit, 1);
 
-    // Вторая строка: изменение текущего значения
     QWidget* changeWidget = new QWidget;
     QHBoxLayout* changeLayout = new QHBoxLayout(changeWidget);
     changeLayout->setContentsMargins(0, 0, 0, 0);
@@ -421,7 +407,6 @@ void GoalEdit::createAccumWidget()
     changeLayout->addWidget(addButton);
     changeLayout->addWidget(subButton);
 
-    // Прогресс-бар
     accum_progress = new QProgressBar;
     accum_progress->setStyleSheet(R"(
         QProgressBar {
@@ -439,12 +424,10 @@ void GoalEdit::createAccumWidget()
     accum_progress->setRange(0, 100);
     accum_progress->setValue(0);
 
-    // Добавляем все в layout
     accumLayout->addWidget(targetWidget);
     accumLayout->addWidget(changeWidget);
     accumLayout->addWidget(accum_progress);
 
-    // Подключаем сигналы кнопок
     connect(addButton, &QPushButton::clicked, this, [this]() {
         updateProgress(true);
     });
@@ -511,16 +494,11 @@ void GoalEdit::createCompositeWidget()
 
 void GoalEdit::insertTypeStack()
 {
-    // Ищем основной layout формы
+
     QVBoxLayout* mainLayout = qobject_cast<QVBoxLayout*>(layout());
-    if (!mainLayout) {
-        // Пробуем найти layout через ui
-       //mainLayout = qobject_cast<QVBoxLayout*>(ui->verticalLayout); //no member named verticalLayout
-    }
 
     if (!mainLayout) return;
 
-    // Ищем позицию для вставки - после радиокнопок
     int insertPosition = -1;
     for (int i = 0; i < mainLayout->count(); i++) {
         QWidget* w = mainLayout->itemAt(i)->widget();
@@ -532,7 +510,6 @@ void GoalEdit::insertTypeStack()
         }
     }
 
-    // Если не нашли радиокнопки, ищем перед кнопками срока/тэгов
     if (insertPosition == -1) {
         for (int i = 0; i < mainLayout->count(); i++) {
             QWidget* w = mainLayout->itemAt(i)->widget();
@@ -546,7 +523,6 @@ void GoalEdit::insertTypeStack()
     if (insertPosition > 0) {
         mainLayout->insertWidget(insertPosition, typeStack);
     } else {
-        // Если ничего не нашли, добавляем перед кнопками OK/Cancel
         for (int i = 0; i < mainLayout->count(); i++) {
             QLayoutItem* item = mainLayout->itemAt(i);
             if (item->widget() && item->widget()->objectName().contains("buttonBox")) {
@@ -580,117 +556,24 @@ void GoalEdit::updateTypeUI()
     }
 }
 
-//Goal* GoalEdit::createGoal() const
-//{
-//    Goal* g = new Goal;
-
-//    g->id = QUuid::createUuid().toString(QUuid::WithoutBraces);
-//    g->name = ui->lineEdit->text();
-//    g->description = ui->plainTextEdit->toPlainText();
-
-//    switch (currentType) {
-//    case Simple:
-//        g->type = "simple";
-//        break;
-//    case Accumulation:
-//        g->type = "accumulation";
-//        break;
-//    case Composite:
-//        g->type = "composite";
-//        break;
-//    }
-
-//    g->deadline = ui->deadlineButton->property("deadline").toDateTime();
-//    g->tagIds = ui->tagsButton->property("tags").toStringList();
-
-//    g->current = 0;
-//    g->target = 0;
-
-//    return g;
-//}
-
-//Goal* GoalEdit::createGoal() const
-//{
-//    Goal* goal;
-
-//    // Если редактируем существующую цель, используем её
-//    if (m_existingGoal && !m_newness) {
-//        goal = m_existingGoal;
-//    } else {
-//        // Иначе создаем новую
-//        goal = new Goal;
-//        goal->id = QUuid::createUuid().toString(QUuid::WithoutBraces);
-//    }
-
-//    // Заполняем/обновляем данные
-//    goal->name = ui->lineEdit->text();
-//    goal->description = ui->plainTextEdit->toPlainText();
-
-//    // Тип цели
-//    switch (currentType) {
-//    case Simple:
-//        goal->type = "simple";
-//        goal->current = 0;
-//        goal->target = 0;
-//        break;
-//    case Accumulation:
-//        goal->type = "accumulation";
-//        if (tar_valueLine && accum_progress) {
-//            bool ok;
-//            goal->target = tar_valueLine->text().toInt(&ok);
-//            if (!ok) goal->target = 0;
-//            goal->current = accum_progress->value();
-//        }
-//        break;
-//    case Composite:
-//        goal->type = "composite";
-//        goal->current = 0;
-//        goal->target = 0;
-//        // Здесь нужно сохранить подцели
-//        if (subgoalsList) {
-//            goal->subgoalIds.clear();
-//            for (int i = 0; i < subgoalsList->count(); ++i) {
-//                // Предположим, что каждый элемент списка имеет ID
-//                // В реальности здесь нужно создать подцели
-//                goal->subgoalIds.append(QString::number(i));
-//            }
-//        }
-//        break;
-//    }
-
-//    // Дедлайн
-//    goal->deadline = ui->deadlineButton->property("deadline").toDateTime();
-
-//    // Тэги
-//    goal->tagIds = ui->tagsButton->property("tags").toStringList();
-
-//    // По умолчанию в первую папку
-//    goal->folderId = "folder_0";
-
-//    return goal;
-//}
 
 Goal* GoalEdit::createGoal() const
 {
     Goal* goal;
 
     if (!m_newness && m_existingGoal) {
-        // Редактируем существующую цель
         goal = m_existingGoal;
     } else {
-        // Создаем новую цель
         goal = new Goal;
         goal->id = QUuid::createUuid().toString(QUuid::WithoutBraces);
-        goal->folderId = "folder_1"; // По умолчанию в первую папку
-        goal->parentId = ""; // По умолчанию нет родителя
-        goal->subgoalIds.clear(); // Нет подцелей
+        goal->folderId = "folder_1";
+        goal->parentId = "";
+        goal->subgoalIds.clear();
     }
 
-    // Заполняем/обновляем основные данные
     goal->name = ui->lineEdit->text().trimmed();
     goal->description = ui->plainTextEdit->toPlainText().trimmed();
 
-    // Определяем тип цели
     switch (currentType) {
     case Simple: {
         goal->type = "simple";
@@ -702,7 +585,6 @@ Goal* GoalEdit::createGoal() const
     case Accumulation: {
         goal->type = "accumulation";
 
-        // Получаем target
         bool targetOk, currentOk;
         int targetValue = tar_valueLine->text().toInt(&targetOk);
         if (targetOk && targetValue > 0) {
@@ -711,10 +593,8 @@ Goal* GoalEdit::createGoal() const
             goal->target = 0;
         }
 
-        // Получаем current из прогресс-бара
         goal->current = accum_progress ? accum_progress->value() : 0;
 
-        // Если есть единицы измерения, добавляем их к описанию
         QString unit = unitLineEdit ? unitLineEdit->text().trimmed() : "";
         if (!unit.isEmpty() && !goal->description.contains(unit)) {
             if (!goal->description.isEmpty()) {
@@ -730,15 +610,11 @@ Goal* GoalEdit::createGoal() const
         goal->current = 0;
         goal->target = 0;
 
-        // Сохраняем подцели
         goal->subgoalIds.clear();
         if (subgoalsList) {
-            // Создаем ID для каждой подцели
             for (int i = 0; i < subgoalsList->count(); ++i) {
                 QListWidgetItem* item = subgoalsList->item(i);
                 if (item) {
-                    // В реальном приложении здесь нужно было бы создавать
-                    // полноценные объекты Goal для подцелей
                     QString subgoalId = QUuid::createUuid().toString(QUuid::WithoutBraces);
                     goal->subgoalIds.append(subgoalId);
                 }
@@ -748,15 +624,13 @@ Goal* GoalEdit::createGoal() const
         }
     }
 
-    // Сохраняем дедлайн
     QVariant deadlineVar = ui->deadlineButton->property("deadline");
     if (deadlineVar.isValid()) {
         goal->deadline = deadlineVar.toDateTime();
     } else {
-        goal->deadline = QDateTime(); // Невалидная дата
+        goal->deadline = QDateTime();
     }
 
-    // Сохраняем тэги
     QVariant tagsVar = ui->tagsButton->property("tags");
     if (tagsVar.isValid()) {
         goal->tagIds = tagsVar.toStringList();
@@ -764,7 +638,6 @@ Goal* GoalEdit::createGoal() const
         goal->tagIds.clear();
     }
 
-    // Логирование для отладки
     qDebug() << "Creating/updating goal:";
     qDebug() << "  ID:" << goal->id;
     qDebug() << "  Name:" << goal->name;
@@ -782,7 +655,6 @@ Goal* GoalEdit::createGoal() const
 }
 
 
-// Метод для обновления прогресса
 void GoalEdit::updateProgress(bool add)
 {
     if (!valueLine || !tar_valueLine || !accum_progress) return;
@@ -816,7 +688,6 @@ void GoalEdit::updateProgress(bool add)
         .arg(unitLineEdit ? unitLineEdit->text() : ""));
 }
 
-// Метод для добавления подцели
 void GoalEdit::addSubgoal()
 {
     if (!subgoalsList) return;
@@ -835,23 +706,19 @@ void GoalEdit::loadGoalData(Goal* goal)
 {
     if (!goal) return;
 
-    // Заполняем основные поля
     ui->lineEdit->setText(goal->name);
     ui->plainTextEdit->setPlainText(goal->description);
 
-    // Устанавливаем дедлайн
     if (goal->deadline.isValid()) {
         ui->deadlineButton->setText(goal->deadline.toString("dd.MM.yyyy HH:mm"));
         ui->deadlineButton->setProperty("deadline", goal->deadline);
     }
 
-    // Устанавливаем тэги
     if (!goal->tagIds.isEmpty()) {
         ui->tagsButton->setText(goal->tagIds.join(", "));
         ui->tagsButton->setProperty("tags", goal->tagIds);
     }
 
-    // Устанавливаем тип цели
     if (goal->type == "simple") {
         ui->radioButton->setChecked(true);
         currentType = Simple;
@@ -863,7 +730,6 @@ void GoalEdit::loadGoalData(Goal* goal)
         currentType = Composite;
     }
 
-    // Загружаем специфичные данные для типов
     if (currentType == Accumulation && goal->type == "accumulation") {
         if (tar_valueLine) {
             tar_valueLine->setText(QString::number(goal->target));
@@ -872,16 +738,13 @@ void GoalEdit::loadGoalData(Goal* goal)
             accum_progress->setValue(goal->current);
             accum_progress->setMaximum(goal->target);
             if (unitLineEdit && !goal->description.isEmpty()) {
-                // Можно использовать единицы измерения из описания или отдельного поля
                 unitLineEdit->setText("ед.");
             }
         }
     }
 
-    // Для составных целей загружаем подцели
     if (currentType == Composite && goal->type == "composite") {
-        // Здесь нужно загрузить подцели
-        // Это зависит от того, как вы их храните
+        // здесь могла быть загрузка подцелей, но её тут нет
     }
 
     updateTypeUI();
