@@ -48,11 +48,67 @@ MainWindow::MainWindow(QWidget *parent) :
 //    clickCount(0),
 //    lastClickedGoalId("")
 {
+
+
+
     mainPathToSource = new QString("C:\\Users\\Danik\\Desktop\\sibsutis_09.03.01_IP_3_course_Visual_Programming_Course_Project");
 
     ui->setupUi(this);
     setWindowTitle("ToDos");
     setWindowIcon(QIcon(QString(*mainPathToSource + "\\IMG\\MainIcon.ico")));
+
+    systemTrayIcon = new QSystemTrayIcon(this);
+        systemTrayIcon->setIcon(QIcon(QString(*mainPathToSource + "\\IMG\\MainIcon.ico")));
+        systemTrayIcon->setToolTip("ToDos - Менеджер задач");
+
+        // Создание меню для трея
+        trayMenu = new QMenu(this);
+        trayMenu->setStyleSheet(R"(
+            QMenu {
+                background-color: rgba(254, 245, 218, 1);
+                border: 2px solid #2196F3;
+                border-radius: 5px;
+                padding: 5px;
+            }
+            QMenu::item {
+                padding: 8px 20px;
+                font-size: 14px;
+                color: #333;
+                border-radius: 3px;
+            }
+            QMenu::item:selected {
+                background-color: #E3F2FD;
+                color: #1976D2;
+            }
+            QMenu::separator {
+                height: 1px;
+                background-color: #E0E0E0;
+                margin: 5px 0;
+            }
+        )");
+
+        QAction* showAction = new QAction("Показать", this);
+        QAction* endDayAction = new QAction("Закончить день", this);
+        QAction* quitAction = new QAction("Выйти", this);
+
+        trayMenu->addAction(showAction);
+        trayMenu->addSeparator();
+        trayMenu->addAction(endDayAction);
+        trayMenu->addAction(quitAction);
+
+        systemTrayIcon->setContextMenu(trayMenu);
+
+        // Подключение сигналов трея
+        connect(showAction, &QAction::triggered, this, &MainWindow::showMainWindow);
+        connect(endDayAction, &QAction::triggered, this, &MainWindow::endDay);
+        connect(quitAction, &QAction::triggered, this, &MainWindow::quitApplication);
+        connect(systemTrayIcon, &QSystemTrayIcon::activated,
+                this, &MainWindow::trayIconActivated);
+
+        // Показать иконку в трее
+        systemTrayIcon->show();
+
+
 
     ui->centralWidget->setStyleSheet("QWidget{background-color: rgba(238, 232, 211, 1);}");
     ui->HeadWidget->setStyleSheet("QWidget{background-color: rgba(221, 205, 179, 1); border: 3px solid black;}");
@@ -418,6 +474,11 @@ MainWindow::MainWindow(QWidget *parent) :
             connect(clickTimer, &QTimer::timeout, this, &MainWindow::onSingleClick);
 
             setupContextMenuForViews();
+
+            if (n_timeDesk) {
+                    // Если TimeDesk - это кнопка или виджет с сигналом clicked
+                    connect(n_timeDesk, &TimeDesk::clicked, this, &MainWindow::endDay); //no member named clicked
+                }
 }
 
 
@@ -2845,11 +2906,160 @@ void MainWindow::openCreateGoalDialog()
 //    endInsertRows();
 //}
 
-void MainWindow::openNearGoal(){
 
-}
-void MainWindow::endDay(){
+void MainWindow::endDay()
+{
+    QDialog* endDayDialog = new QDialog(this);
+    endDayDialog->setWindowTitle("Закончить день");
+    endDayDialog->setModal(true);
+    endDayDialog->setFixedSize(500, 350);
+    endDayDialog->setWindowIcon(QIcon(QString(*mainPathToSource + "\\IMG\\MainIcon.ico")));
 
+    endDayDialog->setStyleSheet(R"(
+        QDialog {
+            background-color: rgba(254, 245, 218, 1);
+            border: 3px solid #FF9800;
+            border-radius: 10px;
+        }
+        QLabel {
+            color: #333;
+        }
+    )");
+
+    QVBoxLayout* mainLayout = new QVBoxLayout(endDayDialog);
+    mainLayout->setContentsMargins(30, 30, 30, 30);
+    mainLayout->setSpacing(25);
+
+    // Мотивирующая фраза (можно сделать случайной)
+    QStringList motivationalPhrases = {
+        "Отличная работа сегодня! Задачи под контролем! 🎉",
+        "Продуктивный день! Вы на шаг ближе к своим целям! 🚀",
+        "Сегодня было продуктивно! Отличный прогресс! 🌟",
+        "Вы хорошо поработали! Заслуженный отдых! ✨",
+        "День завершён с пользой! Гордитесь своими достижениями! 💪"
+    };
+
+    QString randomPhrase = motivationalPhrases[QRandomGenerator::global()->bounded(motivationalPhrases.size())];
+
+    QLabel* titleLabel = new QLabel("Итоги дня");
+    titleLabel->setStyleSheet(R"(
+        QLabel {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF9800;
+            text-align: center;
+        }
+    )");
+
+    QLabel* phraseLabel = new QLabel(randomPhrase);
+    phraseLabel->setWordWrap(true);
+    phraseLabel->setAlignment(Qt::AlignCenter);
+    phraseLabel->setStyleSheet(R"(
+        QLabel {
+            font-size: 18px;
+            font-style: italic;
+            text-align: center;
+            color: #5D4037;
+            padding: 10px;
+            background-color: rgba(255, 152, 0, 0.1);
+            border-radius: 8px;
+            border: 1px dashed #FF9800;
+        }
+    )");
+
+    // Подсчёт выполненных задач за сегодня
+    int completedToday = 0;
+    QDate today = QDate::currentDate();
+    for (Goal* goal : allGoals) {
+        if (goal->tagIds.contains("Выполнено")) {
+            // Здесь можно добавить логику проверки, была ли задача выполнена сегодня
+            completedToday++;
+        }
+    }
+
+    QLabel* statsLabel = new QLabel(QString("Выполнено задач сегодня: <b>%1</b>").arg(completedToday));
+    statsLabel->setAlignment(Qt::AlignCenter);
+    statsLabel->setStyleSheet(R"(
+        QLabel {
+            font-size: 16px;
+            color: #388E3C;
+        }
+    )");
+
+    // Кнопки выбора
+    QWidget* buttonsWidget = new QWidget;
+    QHBoxLayout* buttonsLayout = new QHBoxLayout(buttonsWidget);
+    buttonsLayout->setContentsMargins(0, 0, 0, 0);
+    buttonsLayout->setSpacing(20);
+
+    QPushButton* continueButton = new QPushButton("Продолжить работу");
+    QPushButton* endDayButton = new QPushButton("Закончить день");
+
+    continueButton->setStyleSheet(R"(
+        QPushButton {
+            background-color: rgba(165, 224, 155, 1);
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 12px 24px;
+            color: #1B5E20;
+        }
+        QPushButton:hover {
+            background-color: rgba(145, 204, 135, 1);
+        }
+        QPushButton:pressed {
+            background-color: rgba(125, 184, 115, 1);
+        }
+    )");
+
+    endDayButton->setStyleSheet(R"(
+        QPushButton {
+            background-color: rgba(255, 152, 0, 1);
+            border: 2px solid #F57C00;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 12px 24px;
+            color: white;
+        }
+        QPushButton:hover {
+            background-color: rgba(245, 124, 0, 1);
+        }
+        QPushButton:pressed {
+            background-color: rgba(230, 81, 0, 1);
+        }
+    )");
+
+    buttonsLayout->addWidget(continueButton);
+    buttonsLayout->addWidget(endDayButton);
+
+    mainLayout->addWidget(titleLabel);
+    mainLayout->addWidget(phraseLabel);
+    mainLayout->addWidget(statsLabel);
+    mainLayout->addStretch();
+    mainLayout->addWidget(buttonsWidget);
+
+    // Подключение кнопок
+    connect(continueButton, &QPushButton::clicked, endDayDialog, &QDialog::reject);
+    connect(endDayButton, &QPushButton::clicked, endDayDialog, &QDialog::accept);
+
+    // Показываем диалог
+    int result = endDayDialog->exec();
+    endDayDialog->deleteLater();
+
+    if (result == QDialog::Accepted) {
+        // Сохраняем все данные перед выходом
+        saveGoalsToJson();
+        saveFoldersToJson();
+
+        // Показываем прощальное сообщение
+        QMessageBox::information(this, "До встречи!",
+            "Спасибо за использование ToDos!\nХорошего отдыха! 🌙");
+
+        // Полностью закрываем приложение
+        qApp->quit();
+    }
 }
 
 
@@ -3383,4 +3593,78 @@ void MainWindow::updateNearEventDesk()
     if (n_nearEventDesk) {
         n_nearEventDesk->updateNearestEvent();
     }
+}
+
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    // Вместо закрытия скрываем окно в трей
+    if (systemTrayIcon->isVisible()) {
+        hide();
+        systemTrayIcon->showMessage("ToDos",
+            "Приложение продолжает работать в фоновом режиме.\n"
+            "Нажмите на иконку в трее, чтобы открыть.",
+            QSystemTrayIcon::Information, 3000);
+        event->ignore();
+    }
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::WindowStateChange) {
+        if (isMinimized()) {
+            // При сворачивании тоже скрываем в трей
+            hide();
+            event->ignore();
+        }
+    }
+    QMainWindow::changeEvent(event);
+}
+
+void MainWindow::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
+{
+    if (reason == QSystemTrayIcon::Trigger) {
+        // По клику на иконке в трее показываем/скрываем окно
+        if (isVisible()) {
+            hide();
+        } else {
+            showNormal();
+            activateWindow();
+            raise();
+        }
+    }
+}
+
+void MainWindow::showMainWindow()
+{
+    showNormal();
+    activateWindow();
+    raise();
+}
+
+void MainWindow::quitApplication()
+{
+    // Подтверждение выхода
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this,
+        "Выход из приложения",
+        "Вы действительно хотите выйти?\n"
+        "Все несохранённые данные будут потеряны.",
+        QMessageBox::Yes | QMessageBox::No
+    );
+
+    if (reply == QMessageBox::Yes) {
+        saveGoalsToJson();
+        saveFoldersToJson();
+        systemTrayIcon->hide();
+        qApp->quit();
+    }
+}
+
+void TimeDesk::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        emit clicked();
+    }
+    QWidget::mousePressEvent(event);
 }

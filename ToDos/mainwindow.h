@@ -11,6 +11,8 @@
 #include <QTableView>
 #include <QStyledItemDelegate>
 #include <QStackedWidget>
+#include <QSystemTrayIcon>
+#include <QCloseEvent>
 #include "objects.h"
 #include "delegates.h"
 #include "lists.h"
@@ -160,16 +162,27 @@ private:
     void dataChangedForAllModels();
     void updateNearEventDesk();
 
+    QSystemTrayIcon* systemTrayIcon;
+    QMenu* trayMenu;
+
+    void showEndDayDialog();
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
+    void changeEvent(QEvent *event) override;
+
 private slots:
+    void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
+    void showMainWindow();
+    void quitApplication();
     void openFolder(bool newness);
     void openAbout();
-    void openNearGoal();
-    void endDay();
     void openAddGoal(bool newness);
     void openCreateGoalDialog();
     void onGoalSelected(const QModelIndex& current, const QModelIndex& previous);
     void deleteSelectedGoal();
     void openNearestGoal(const QString& goalId);
+    void endDay();
 ;
 signals:
     void modelsDataChanged();
@@ -185,10 +198,16 @@ public:
 private slots:
     void updateTime();
 
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
+
 private:
     QLabel* dateLabel;
     QLabel* timeLabel;
     QTimer* timer;
+
+signals:
+    void clicked();
 };
 
 class NearEventDesk : public QWidget
