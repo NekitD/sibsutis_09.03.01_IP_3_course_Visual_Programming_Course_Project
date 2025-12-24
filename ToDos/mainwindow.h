@@ -158,6 +158,7 @@ private:
     void openEditGoal(const QString& goalId);
 
     void dataChangedForAllModels();
+    void updateNearEventDesk();
 
 private slots:
     void openFolder(bool newness);
@@ -168,7 +169,8 @@ private slots:
     void openCreateGoalDialog();
     void onGoalSelected(const QModelIndex& current, const QModelIndex& previous);
     void deleteSelectedGoal();
-
+    void openNearestGoal(const QString& goalId);
+;
 signals:
     void modelsDataChanged();
 };
@@ -192,17 +194,37 @@ private:
 class NearEventDesk : public QWidget
 {
     Q_OBJECT
+
 public:
     explicit NearEventDesk(const QString& jsonPath, QWidget* parent = nullptr);
-    void mousePressEvent(QMouseEvent* event);
 
-private slots:
+    // Методы для получения информации о ближайшей цели
+    QString nearestGoalId() const { return m_nearestGoalId; }
+    QString nearestGoalName() const { return m_nearestGoalName; }
+    QDateTime nearestDeadline() const { return m_nearestDeadline; }
+
+    // Слот для обновления данных
     void updateNearestEvent();
+
+signals:
+    // Сигнал при клике на виджет
+    void nearestGoalClicked(const QString& goalId);
+
+protected:
+    // Обработчик клика мыши
+    void mousePressEvent(QMouseEvent* event) override;
 
 private:
     QString m_jsonPath;
     QLabel* goalLabel;
     QLabel* datetimeLabel;
+
+    // Данные о ближайшей цели
+    QString m_nearestGoalId;
+    QString m_nearestGoalName;
+    QDateTime m_nearestDeadline;
+
+    QTimer* m_updateTimer;
 };
 
 #endif // MAINWINDOW_H

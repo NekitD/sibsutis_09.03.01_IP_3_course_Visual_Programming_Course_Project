@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_MainWindow_t {
-    QByteArrayData data[15];
-    char stringdata0[175];
+    QByteArrayData data[17];
+    char stringdata0[198];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -45,14 +45,17 @@ QT_MOC_LITERAL(10, 112, 14), // "onGoalSelected"
 QT_MOC_LITERAL(11, 127, 11), // "QModelIndex"
 QT_MOC_LITERAL(12, 139, 7), // "current"
 QT_MOC_LITERAL(13, 147, 8), // "previous"
-QT_MOC_LITERAL(14, 156, 18) // "deleteSelectedGoal"
+QT_MOC_LITERAL(14, 156, 18), // "deleteSelectedGoal"
+QT_MOC_LITERAL(15, 175, 15), // "openNearestGoal"
+QT_MOC_LITERAL(16, 191, 6) // "goalId"
 
     },
     "MainWindow\0modelsDataChanged\0\0openFolder\0"
     "newness\0openAbout\0openNearGoal\0endDay\0"
     "openAddGoal\0openCreateGoalDialog\0"
     "onGoalSelected\0QModelIndex\0current\0"
-    "previous\0deleteSelectedGoal"
+    "previous\0deleteSelectedGoal\0openNearestGoal\0"
+    "goalId"
 };
 #undef QT_MOC_LITERAL
 
@@ -62,7 +65,7 @@ static const uint qt_meta_data_MainWindow[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-       9,   14, // methods
+      10,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -70,17 +73,18 @@ static const uint qt_meta_data_MainWindow[] = {
        1,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    0,   59,    2, 0x06 /* Public */,
+       1,    0,   64,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-       3,    1,   60,    2, 0x08 /* Private */,
-       5,    0,   63,    2, 0x08 /* Private */,
-       6,    0,   64,    2, 0x08 /* Private */,
-       7,    0,   65,    2, 0x08 /* Private */,
-       8,    1,   66,    2, 0x08 /* Private */,
-       9,    0,   69,    2, 0x08 /* Private */,
-      10,    2,   70,    2, 0x08 /* Private */,
-      14,    0,   75,    2, 0x08 /* Private */,
+       3,    1,   65,    2, 0x08 /* Private */,
+       5,    0,   68,    2, 0x08 /* Private */,
+       6,    0,   69,    2, 0x08 /* Private */,
+       7,    0,   70,    2, 0x08 /* Private */,
+       8,    1,   71,    2, 0x08 /* Private */,
+       9,    0,   74,    2, 0x08 /* Private */,
+      10,    2,   75,    2, 0x08 /* Private */,
+      14,    0,   80,    2, 0x08 /* Private */,
+      15,    1,   81,    2, 0x08 /* Private */,
 
  // signals: parameters
     QMetaType::Void,
@@ -94,6 +98,7 @@ static const uint qt_meta_data_MainWindow[] = {
     QMetaType::Void,
     QMetaType::Void, 0x80000000 | 11, 0x80000000 | 11,   12,   13,
     QMetaType::Void,
+    QMetaType::Void, QMetaType::QString,   16,
 
        0        // eod
 };
@@ -113,6 +118,7 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 6: _t->openCreateGoalDialog(); break;
         case 7: _t->onGoalSelected((*reinterpret_cast< const QModelIndex(*)>(_a[1])),(*reinterpret_cast< const QModelIndex(*)>(_a[2]))); break;
         case 8: _t->deleteSelectedGoal(); break;
+        case 9: _t->openNearestGoal((*reinterpret_cast< const QString(*)>(_a[1]))); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -156,13 +162,13 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 9)
+        if (_id < 10)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 9;
+        _id -= 10;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 9)
+        if (_id < 10)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 9;
+        _id -= 10;
     }
     return _id;
 }
@@ -267,8 +273,8 @@ int TimeDesk::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     return _id;
 }
 struct qt_meta_stringdata_NearEventDesk_t {
-    QByteArrayData data[3];
-    char stringdata0[34];
+    QByteArrayData data[4];
+    char stringdata0[41];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -278,11 +284,13 @@ struct qt_meta_stringdata_NearEventDesk_t {
 static const qt_meta_stringdata_NearEventDesk_t qt_meta_stringdata_NearEventDesk = {
     {
 QT_MOC_LITERAL(0, 0, 13), // "NearEventDesk"
-QT_MOC_LITERAL(1, 14, 18), // "updateNearestEvent"
-QT_MOC_LITERAL(2, 33, 0) // ""
+QT_MOC_LITERAL(1, 14, 18), // "nearestGoalClicked"
+QT_MOC_LITERAL(2, 33, 0), // ""
+QT_MOC_LITERAL(3, 34, 6) // "goalId"
 
     },
-    "NearEventDesk\0updateNearestEvent\0"
+    "NearEventDesk\0nearestGoalClicked\0\0"
+    "goalId"
 };
 #undef QT_MOC_LITERAL
 
@@ -297,13 +305,13 @@ static const uint qt_meta_data_NearEventDesk[] = {
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
-       0,       // signalCount
+       1,       // signalCount
 
- // slots: name, argc, parameters, tag, flags
-       1,    0,   19,    2, 0x08 /* Private */,
+ // signals: name, argc, parameters, tag, flags
+       1,    1,   19,    2, 0x06 /* Public */,
 
- // slots: parameters
-    QMetaType::Void,
+ // signals: parameters
+    QMetaType::Void, QMetaType::QString,    3,
 
        0        // eod
 };
@@ -314,11 +322,19 @@ void NearEventDesk::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
         auto *_t = static_cast<NearEventDesk *>(_o);
         Q_UNUSED(_t)
         switch (_id) {
-        case 0: _t->updateNearestEvent(); break;
+        case 0: _t->nearestGoalClicked((*reinterpret_cast< const QString(*)>(_a[1]))); break;
         default: ;
         }
+    } else if (_c == QMetaObject::IndexOfMethod) {
+        int *result = reinterpret_cast<int *>(_a[0]);
+        {
+            using _t = void (NearEventDesk::*)(const QString & );
+            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&NearEventDesk::nearestGoalClicked)) {
+                *result = 0;
+                return;
+            }
+        }
     }
-    Q_UNUSED(_a);
 }
 
 QT_INIT_METAOBJECT const QMetaObject NearEventDesk::staticMetaObject = { {
@@ -359,6 +375,13 @@ int NearEventDesk::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
         _id -= 1;
     }
     return _id;
+}
+
+// SIGNAL 0
+void NearEventDesk::nearestGoalClicked(const QString & _t1)
+{
+    void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(&_t1)) };
+    QMetaObject::activate(this, &staticMetaObject, 0, _a);
 }
 QT_WARNING_POP
 QT_END_MOC_NAMESPACE

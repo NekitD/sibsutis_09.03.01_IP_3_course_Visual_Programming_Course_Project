@@ -406,6 +406,12 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(ui->deleteButton, &QPushButton::clicked,
                 this, &MainWindow::deleteSelectedGoal);
 
+
+
+            // Подключаем сигнал клика на ближайшую цель
+        connect(n_nearEventDesk, &NearEventDesk::nearestGoalClicked,
+                    this, &MainWindow::openNearestGoal);
+
         clickTimer = new QTimer(this);
             clickTimer->setSingleShot(true);
             clickTimer->setInterval(250); // 250 мс для двойного клика
@@ -481,6 +487,7 @@ void MainWindow::openAddGoal(bool newness)
 
     if (dlg.exec() == QDialog::Accepted) {
         Goal* goal = dlg.createGoal();
+        updateNearEventDesk();
 
         if (newness) {
             // Новая цель - добавляем
@@ -1300,8 +1307,11 @@ NearEventDesk::NearEventDesk(const QString& jsonPath, QWidget* parent)
 void NearEventDesk::updateNearestEvent()
 {
     QFile file(m_jsonPath);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        goalLabel->setText("Ошибка загрузки");
+        datetimeLabel->setText("");
         return;
+    }
 
     QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
     file.close();
@@ -1311,6 +1321,12 @@ void NearEventDesk::updateNearestEvent()
     QDateTime now = QDateTime::currentDateTime();
     QDateTime nearest;
     QString nearestName;
+    QString nearestId;
+
+    // Сбрасываем данные о предыдущей ближайшей цели
+    m_nearestGoalId.clear();
+    m_nearestGoalName.clear();
+    m_nearestDeadline = QDateTime();
 
     for (const QJsonValue& val : goals) {
         QJsonObject obj = val.toObject();
@@ -1319,22 +1335,31 @@ void NearEventDesk::updateNearestEvent()
         if (deadlineStr.isEmpty())
             continue;
 
-        QDateTime deadline =
-            QDateTime::fromString(deadlineStr, Qt::ISODate);
-
+        QDateTime deadline = QDateTime::fromString(deadlineStr, Qt::ISODate);
         if (!deadline.isValid())
             continue;
 
-        if (deadline > now &&
-            (!nearest.isValid() || deadline < nearest)) {
+        // Пропускаем просроченные цели
+        if (deadline < now)
+            continue;
+
+        if (!nearest.isValid() || deadline < nearest) {
             nearest = deadline;
             nearestName = obj["name"].toString();
+            nearestId = obj["id"].toString();
         }
     }
 
     if (nearest.isValid()) {
         goalLabel->setText(nearestName);
         datetimeLabel->setText(nearest.toString("dd MMMM yyyy, HH:mm"));
+
+        // Сохраняем данные о ближайшей цели
+        m_nearestGoalId = nearestId;
+        m_nearestGoalName = nearestName;
+        m_nearestDeadline = nearest;
+
+        qDebug() << "Найдена ближайшая цель:" << nearestName << "ID:" << nearestId;
     } else {
         goalLabel->setText("Нет ближайших целей");
         datetimeLabel->setText("");
@@ -2796,6 +2821,8 @@ void MainWindow::saveGoalsToJson()
     } else {
         qDebug() << "Error saving goals to JSON";
     }
+
+    updateNearEventDesk();
 }
 
 void MainWindow::openCreateGoalDialog()
@@ -2997,6 +3024,8 @@ void MainWindow::deleteSelectedGoal()
     } else {
         QMessageBox::warning(this, "Ошибка", "Не удалось удалить цель");
     }
+
+    updateNearEventDesk();
 }
 
 bool MainWindow::deleteGoalById(const QString& goalId)
@@ -3336,3 +3365,22 @@ void NearEventDesk::mousePressEvent(QMouseEvent* event)
     QWidget::mousePressEvent(event);
 }
 
+void MainWindow::openNearestGoal(const QString& goalId)
+{
+    qDebug() << "Opening nearest goal with ID:" << goalId;
+
+    if (goalId.isEmpty()) {
+        QMessageBox::information(this, "Информация", "Нет ближайших целей для открытия");
+        return;
+    }
+
+    // Используем уже существующий метод для открытия редактирования
+    openEditGoal(goalId);
+}
+
+void MainWindow::updateNearEventDesk()
+{
+    if (n_nearEventDesk) {
+        n_nearEventDesk->updateNearestEvent();
+    }
+}
