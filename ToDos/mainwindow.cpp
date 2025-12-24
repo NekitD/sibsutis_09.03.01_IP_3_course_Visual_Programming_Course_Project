@@ -286,7 +286,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(tabsOutput->selectionModel(),
             &QItemSelectionModel::currentChanged,
             this,
-            [tagsOutput](const QModelIndex& current, const QModelIndex&) {
+            [tagsOutput](const QModelIndex&) {
                 //if(current.isValid()){
                     auto sm = tagsOutput->selectionModel();
                         sm->blockSignals(true);
@@ -311,7 +311,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(tagsOutput->selectionModel(),
             &QItemSelectionModel::currentChanged,
             this,
-            [tabsOutput](const QModelIndex& current, const QModelIndex&) {
+            [tabsOutput](const QModelIndex&) {
                 //if(current.isValid()){
                     auto sm = tabsOutput->selectionModel();
                                 sm->blockSignals(true);
@@ -344,7 +344,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //    layout->addWidget(goalsStack);
 //    ui->GoalsWidget->setLayout(layout);
     auto* grid = new QGridLayout(ui->GoalsWidget);
-    grid->setContentsMargins(10, 10, 10, 10);
+    grid->setContentsMargins(1, 1, 1, 1);
     grid->setSpacing(0);
 
     // основной контент
@@ -464,10 +464,10 @@ QWidget* MainWindow::createIncomingPage()
                 border: 3px solid black;
                 font-size: 16px;
                 selection-background-color: rgba(255, 230, 160, 1);
-                                 padding-top: 3px;
-                                 padding-bottom: 6px;
-                                 padding-left: 5px;
-                                 padding-right: 5px;
+                padding-top: 3px;
+                padding-bottom: 6px;
+                padding-left: 5px;
+                padding-right: 5px;
             }
 
             QTableView::item {
