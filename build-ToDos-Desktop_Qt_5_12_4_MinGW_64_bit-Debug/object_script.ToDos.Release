@@ -1,0 +1,11 @@
+release/delegates.o
+release/goaledit.o
+release/lists.o
+release/main.o
+release/mainwindow.o
+release/models.o
+release/objects.o
+release/moc_goaledit.o
+release/moc_lists.o
+release/moc_mainwindow.o
+release/moc_models.o

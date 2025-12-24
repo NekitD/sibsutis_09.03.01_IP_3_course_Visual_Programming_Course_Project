@@ -25,13 +25,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        delegates.cpp \
         goaledit.cpp \
+        lists.cpp \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+        models.cpp \
+        objects.cpp
 
 HEADERS += \
+        delegates.h \
         goaledit.h \
-        mainwindow.h
+        lists.h \
+        mainwindow.h \
+        models.h \
+        objects.h
 
 FORMS += \
         goaledit.ui \

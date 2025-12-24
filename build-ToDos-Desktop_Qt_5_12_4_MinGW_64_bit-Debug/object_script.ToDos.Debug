@@ -1,0 +1,11 @@
+debug/delegates.o
+debug/goaledit.o
+debug/lists.o
+debug/main.o
+debug/mainwindow.o
+debug/models.o
+debug/objects.o
+debug/moc_goaledit.o
+debug/moc_lists.o
+debug/moc_mainwindow.o
+debug/moc_models.o
