@@ -183,38 +183,97 @@ int GoalsTableModel::rowCount(const QModelIndex&) const {
     return m_filteredGoals.size();
 }
 
-QVariant GoalsTableModel::data(const QModelIndex& index, int role) const {
+//QVariant GoalsTableModel::data(const QModelIndex& index, int role) const {
+//    if (!index.isValid() || index.row() >= m_filteredGoals.size())
+//        return {};
+
+//    const Goal* g = m_filteredGoals.at(index.row());
+
+//    if (role == DeadlineRole)
+//        return g->deadline;
+
+//    if (role == TagRole)
+//        return g->tagIds;
+
+//    if (role == FolderRole)
+//        return g->folderId;
+
+//    if (role == Qt::DisplayRole) {
+//        switch (index.column()) {
+//            case NameColumn:
+//                return g->name;
+//            case DescriptionColumn:
+//                return g->description;
+//            case DeadlineColumn:
+//                return g->deadline.isValid()
+//                    ? g->deadline.toString("dd.MM.yyyy HH:mm")
+//                    : "—";
+//            case StatusColumn:
+//                return g->tagIds.join(", ");
+//        }
+//    }
+//    return {};
+//}
+
+QVariant GoalsTableModel::data(const QModelIndex& index, int role) const
+{
     if (!index.isValid() || index.row() >= m_filteredGoals.size())
         return {};
 
     const Goal* g = m_filteredGoals.at(index.row());
 
-    if (role == DeadlineRole)
-        return g->deadline;
+    switch(role) {
+        case Qt::DisplayRole:
+            switch (index.column()) {
+                case NameColumn:
+                    return g->name;
+                case DescriptionColumn:
+                    return g->description;
+                case DeadlineColumn:
+                    return g->deadline.isValid()
+                        ? g->deadline.toString("dd.MM.yyyy HH:mm")
+                        : "—";
+                case StatusColumn:
+                    return g->tagIds.join(", ");
+            }
+            break;
 
-    if (role == TagRole)
-        return g->tagIds;
+        case IdRole:
+            return g->id;
 
-    if (role == FolderRole)
-        return g->folderId;
+        case NameRole:
+            return g->name;
 
-    if (role == Qt::DisplayRole) {
-        switch (index.column()) {
-            case NameColumn:
-                return g->name;
-            case DescriptionColumn:
-                return g->description;
-            case DeadlineColumn:
-                return g->deadline.isValid()
-                    ? g->deadline.toString("dd.MM.yyyy HH:mm")
-                    : "—";
-            case StatusColumn:
-                return g->tagIds.join(", ");
-        }
+        case DescriptionRole:
+            return g->description;
+
+        case TypeRole:
+            return g->type;
+
+        case CurrentRole:
+            return g->current;
+
+        case TargetRole:
+            return g->target;
+
+        case DeadlineRole:
+            return g->deadline;
+
+        case TagRole:
+            return g->tagIds;
+
+        case FolderRole:
+            return g->folderId;
+
+        case ParentRole:
+            return g->parentId;
+
+        case SubgoalsRole:
+            return g->subgoalIds;
     }
+
     return {};
 }
-
 
 QVariant GoalsTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
@@ -228,5 +287,67 @@ QVariant GoalsTableModel::headerData(int section, Qt::Orientation orientation, i
         case StatusColumn: return "Статусы";
     }
     return {};
+}
+
+bool GoalsTableModel::removeGoal(const QString& goalId)
+{
+    if (!m_sourceGoals)
+        return false;
+
+    // Находим цель в источнике данных
+    for (int i = 0; i < m_sourceGoals->size(); ++i) {
+        Goal* goal = m_sourceGoals->at(i);
+        if (goal->id == goalId) {
+            // Находим индекс в отфильтрованном списке
+            int filteredRow = -1;
+            for (int j = 0; j < m_filteredGoals.size(); ++j) {
+                if (m_filteredGoals[j] == goal) {
+                    filteredRow = j;
+                    break;
+                }
+            }
+
+            // Удаляем из источника (но НЕ удаляем объект - этим займется MainWindow)
+            const_cast<QVector<Goal*>*>(m_sourceGoals)->removeAt(i);
+
+            // Обновляем отфильтрованный список
+            if (filteredRow >= 0) {
+                beginRemoveRows(QModelIndex(), filteredRow, filteredRow);
+                m_filteredGoals.removeAt(filteredRow);
+                endRemoveRows();
+            } else {
+                // Если цель не в фильтре, просто перефильтруем
+                applyFilters();
+            }
+
+            emit dataChangedExternally();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+Goal* GoalsTableModel::findGoalById(const QString& goalId) const
+{
+    if (!m_sourceGoals)
+        return nullptr;
+
+    for (Goal* goal : *m_sourceGoals) {
+        if (goal->id == goalId)
+            return goal;
+    }
+
+    return nullptr;
+}
+
+int GoalsTableModel::findRowById(const QString& goalId) const
+{
+    for (int i = 0; i < m_filteredGoals.size(); ++i) {
+        if (m_filteredGoals[i]->id == goalId)
+            return i;
+    }
+
+    return -1;
 }
 

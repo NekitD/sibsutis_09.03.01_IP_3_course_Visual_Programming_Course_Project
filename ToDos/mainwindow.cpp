@@ -41,6 +41,12 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
+//    incomingView(nullptr),
+//    todayView(nullptr),
+//    calendarList(nullptr),
+//    selectedGoalId(""),
+//    clickCount(0),
+//    lastClickedGoalId("")
 {
     mainPathToSource = new QString("C:\\Users\\Danik\\Desktop\\sibsutis_09.03.01_IP_3_course_Visual_Programming_Course_Project");
 
@@ -226,6 +232,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->deleteButton->setText("");
     ui->deleteButton->setToolTip("Удалить цель");
 
+    ui->deleteButton->setEnabled(false);
+
     ui->foldersWidget->setStyleSheet("QWidget{background-color: rgba(232, 203, 168, 1); border: 1px solid black;}");
 
     ui->addFolderButton->setStyleSheet("QPushButton{background-color: rgba(165, 224, 155, 1); border: 2px solid black}");
@@ -321,6 +329,20 @@ MainWindow::MainWindow(QWidget *parent) :
                  //};
             });
 
+    connect(tagsOutput->selectionModel(),
+            &QItemSelectionModel::currentChanged,
+            this,
+            [this, tagsModel](const QModelIndex& current, const QModelIndex&) {
+                if (!current.isValid())
+                    return;
+
+                QString tagId = current.data(IdRole).toString();
+                QString tagName = current.data(NameRole).toString();
+                QString tagColor = current.data(ColorRole).toString();
+
+                onTagSelected(tagId, tagName, tagColor);
+            });
+
 
     allGoals = importGoalsFromJson();
         qDebug() << "Loaded" << allGoals.size() << "goals";
@@ -374,13 +396,30 @@ MainWindow::MainWindow(QWidget *parent) :
 
         ui->GoalsWidget->setLayout(grid);
 
-        connect(addGoalButton, &QPushButton::clicked, this, &MainWindow::openAddGoal);
+        connect(addGoalButton, &QPushButton::clicked, this, [this](){openAddGoal(true);});
+
+        connect(incomingView->selectionModel(), &QItemSelectionModel::currentChanged,
+                this, &MainWindow::onGoalSelected);
+        connect(todayView->selectionModel(), &QItemSelectionModel::currentChanged,
+                this, &MainWindow::onGoalSelected);
+
+        connect(ui->deleteButton, &QPushButton::clicked,
+                this, &MainWindow::deleteSelectedGoal);
+
+        clickTimer = new QTimer(this);
+            clickTimer->setSingleShot(true);
+            clickTimer->setInterval(250); // 250 мс для двойного клика
+            connect(clickTimer, &QTimer::timeout, this, &MainWindow::onSingleClick);
 }
 
 
 
 MainWindow::~MainWindow()
 {
+
+    qDeleteAll(tagModels.values());
+        tagModels.clear();
+
     delete mainGoalsModel;
 
     qDeleteAll(allGoals);
@@ -390,9 +429,9 @@ MainWindow::~MainWindow()
 }
 
 
-void MainWindow::openAddGoal()
+void MainWindow::openAddGoal(bool newness)
 {
-    GoalEdit dlg(this);
+    GoalEdit dlg(this, newness, mainPathToSource);
     dlg.setModal(true);
     dlg.exec();
 
@@ -562,7 +601,7 @@ QWidget* MainWindow::createCalendarPage(const QVector<Goal*>& goals)
     auto* list = new QListView;
     auto* calendar = new QCalendarWidget;
 
-    calendar->setStyleSheet("background-color: rgba(246, 245, 201, 1)");
+    calendar->setStyleSheet("QWidget{background-color: rgba(246, 245, 201, 1); border: 2px solid black; }");
     list->setStyleSheet("background-color: rgba(228, 220, 197, 1)");
 
     auto* model = new GoalsTableModel(this);
@@ -570,7 +609,8 @@ QWidget* MainWindow::createCalendarPage(const QVector<Goal*>& goals)
    // model->setFilterDate(QDate::currentDate());
     model->applyFilters();
 
-    list->setItemDelegate(new QStyledItemDelegate(list));
+    //list->setItemDelegate(new QStyledItemDelegate(list));
+    list->setItemDelegate(new CalendarDelegate(list));
     list->setModel(model);
     list->setModelColumn(NameColumn);
 
@@ -585,10 +625,12 @@ QWidget* MainWindow::createCalendarPage(const QVector<Goal*>& goals)
             QCalendarWidget {
                 background-color: rgba(246, 245, 201, 1);
                 font-size: 14px;
+                border: 2px solid black;
             }
             QCalendarWidget QToolButton {
                 font-size: 16px;
                 font-weight: bold;
+                border: 2px solid black;
             }
         )");
 
@@ -635,6 +677,7 @@ QWidget* MainWindow::createKanbanColumn(const QString& tagName, const QVector<Go
 
     view->setModel(model);
     view->setModelColumn(NameColumn);
+    view->setItemDelegate(new KanbanDelegate(view));
 
     layout->addWidget(header);
     layout->addWidget(view);
@@ -664,7 +707,7 @@ QWidget* MainWindow::createKanbanPage(const QVector<Goal*>& goals)
 
         qDebug() << "Kanban column" << tagName << "has" << model->rowCount() << "goals";
 
-        view->setItemDelegate(new QStyledItemDelegate(view));
+        view->setItemDelegate(new KanbanDelegate(view));
         view->setModel(model);
         view->setModelColumn(NameColumn);
 
@@ -682,6 +725,7 @@ QWidget* MainWindow::createKanbanPage(const QVector<Goal*>& goals)
 
 void MainWindow::onTabChanged(const QString& tabId)
 {
+    clearAllSelections();
     if (tabId == "today") {
         QTableView* tableView = qobject_cast<QTableView*>(todayPage->findChild<QTableView*>());
         if (tableView) {
@@ -703,17 +747,124 @@ void MainWindow::onTabChanged(const QString& tabId)
     }
 }
 
+
+QWidget* MainWindow::createTagPage(const QString& tagId, const QString& tagName, const QString& tagColor)
+{
+    // Проверяем, не создана ли уже такая вкладка
+    if (tagPages.contains(tagId)) {
+        return tagPages[tagId];
+    }
+
+    qDebug() << "Creating tag page for:" << tagName << "color:" << tagColor;
+
+    // Создаем страницу
+    QWidget* page = new QWidget;
+    auto* layout = new QVBoxLayout(page);
+    layout->setContentsMargins(0, 0, 0, 0);
+
+    // Создаем таблицу
+    auto* view = new QTableView;
+    view->setSelectionBehavior(QAbstractItemView::SelectRows);
+    view->setSelectionMode(QAbstractItemView::SingleSelection);
+    view->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    view->setFocusPolicy(Qt::NoFocus);
+
+    // Создаем модель с фильтром по тэгу
+    auto* model = new GoalsTableModel(view);
+    model->setGoalSource(allGoals);
+    model->setFilterTag(tagName);  // Фильтруем по имени тэга
+    model->applyFilters();
+
+    view->setModel(model);
+    view->setItemDelegate(new GoalsDelegate(view));
+    view->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    view->verticalHeader()->setVisible(false);
+    view->verticalHeader()->setDefaultSectionSize(80);
+
+    // Стили с учетом цвета тэга
+    QString headerStyle = QString(R"(
+        QHeaderView::section {
+            background-color: %1;
+            border: 0px solid black;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 1px;
+            font-style: italic;
+        }
+    )").arg(tagColor);
+
+    view->setStyleSheet(R"(
+        QTableView {
+            background-color: rgba(228, 220, 197, 1);
+            border: 3px solid black;
+            font-size: 16px;
+            selection-background-color: rgba(255, 230, 160, 1);
+            padding-top: 0px;
+            padding-bottom: 0px;
+            padding-left: 0px;
+            padding-right: 0px;
+        }
+        QTableView::item {
+            background-color: rgba(255, 250, 230, 1);
+            border: 1px solid black;
+        }
+        QTableView::item:selected {
+            background-color: rgba(255, 235, 180, 1);
+        }
+    )");
+
+    view->horizontalHeader()->setStyleSheet(headerStyle);
+
+    layout->addWidget(view);
+
+    // Сохраняем в хранилищах
+    tagPages[tagId] = page;
+    tagModels[tagId] = model;
+
+    // Добавляем в стек
+    goalsStack->addWidget(page);
+
+    return page;
+}
+
+
+void MainWindow::onTagSelected(const QString& tagId, const QString& tagName, const QString& tagColor)
+{
+    qDebug() << "Tag selected:" << tagName << "id:" << tagId;
+    clearAllSelections();
+    // Создаем или получаем страницу
+    QWidget* tagPage = createTagPage(tagId, tagName, tagColor);
+
+    if (!tagPage) {
+        qDebug() << "Failed to create tag page";
+        return;
+    }
+
+    // Обновляем модель (на случай изменения данных)
+    if (tagModels.contains(tagId)) {
+        GoalsTableModel* model = tagModels[tagId];
+        model->applyFilters();
+    }
+
+    // Переключаемся на страницу
+    goalsStack->setCurrentWidget(tagPage);
+
+    // Меняем заголовок кнопки добавления цели
+    addGoalButton->setToolTip(QString("Добавить цель с тэгом: %1").arg(tagName));
+}
+
+
 void MainWindow::createPagesWithoutOwnership()
 {
     qDebug() << "Starting createPagesWithoutOwnership()";
+
     // Today page
     qDebug() << "Creating today page...";
     todayPage = new QWidget;
     auto* todayLayout = new QVBoxLayout(todayPage);
     todayLayout->setContentsMargins(0, 0, 0, 0);
 
-
-    auto* todayView = new QTableView(todayPage);
+    todayView = new QTableView(todayPage);
     qDebug() << "Created todayView";
     todayView->setSelectionBehavior(QAbstractItemView::SelectRows);
     todayView->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -723,8 +874,7 @@ void MainWindow::createPagesWithoutOwnership()
     qDebug() << "Creating todayModel...";
     todayModel = new GoalsTableModel(todayView);
     qDebug() << "Setting goals for todayModel...";
-
-    todayModel->setGoalSource(allGoals); // ПЕРЕДАЁМ ССЫЛКУ, НЕ КОПИЮ
+    todayModel->setGoalSource(allGoals);
     todayModel->setFilterTodayOnly(true);
     todayModel->applyFilters();
 
@@ -773,7 +923,7 @@ void MainWindow::createPagesWithoutOwnership()
     auto* incomingLayout = new QVBoxLayout(incomingPage);
     incomingLayout->setContentsMargins(0, 0, 0, 0);
 
-    auto* incomingView = new QTableView(incomingPage);
+    incomingView = new QTableView(incomingPage);
     incomingView->setSelectionBehavior(QAbstractItemView::SelectRows);
     incomingView->setSelectionMode(QAbstractItemView::SingleSelection);
     incomingView->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -826,20 +976,46 @@ void MainWindow::createPagesWithoutOwnership()
     auto* calendarLayout = new QHBoxLayout(calendarPage);
     calendarLayout->setContentsMargins(0, 0, 0, 0);
 
-    auto* calendarList = new QListView(calendarPage);
+    calendarList = new QListView(calendarPage);
     auto* calendarWidget = new QCalendarWidget(calendarPage);
 
-    calendarWidget->setStyleSheet("background-color: rgba(246, 245, 201, 1)");
-    calendarList->setStyleSheet("background-color: rgba(228, 220, 197, 1)");
+    calendarWidget->setStyleSheet(R"(
+        QCalendarWidget {
+            background-color: rgba(246, 245, 201, 1);
+            font-size: 14px;
+        }
+        QCalendarWidget QToolButton {
+            font-size: 16px;
+            font-weight: bold;
+        }
+    )");
+
+    calendarList->setStyleSheet(R"(
+        QListView {
+            background-color: rgba(228, 220, 197, 1);
+            border: 3px solid black;
+            font-size: 16px;
+            padding: 5px;
+        }
+        QListView::item {
+            border: none;
+            background: none;
+        }
+        QListView::item:selected {
+            background: none;
+            border: none;
+        }
+    )");
 
     calendarModel = new GoalsTableModel(calendarList);
     calendarModel->setGoalSource(allGoals);
     calendarModel->setFilterDate(QDate::currentDate());
     calendarModel->applyFilters();
 
-    calendarList->setItemDelegate(new QStyledItemDelegate(calendarList));
+    calendarList->setItemDelegate(new CalendarDelegate(calendarList));
+    calendarList->setSpacing(5);
     calendarList->setModel(calendarModel);
-    calendarList->setModelColumn(NameColumn);
+    //calendarList->setModelColumn(NameColumn);
 
     connect(calendarWidget, &QCalendarWidget::clicked,
             this, [this](const QDate& date){
@@ -855,20 +1031,37 @@ void MainWindow::createPagesWithoutOwnership()
     auto* kanbanLayout = new QHBoxLayout(kanbanPage);
     kanbanLayout->setContentsMargins(0, 0, 0, 0);
 
-    // Создаем колонки канбана
+    // Получено
     QWidget* receivedColumn = new QWidget;
     auto* receivedLayout = new QVBoxLayout(receivedColumn);
     QLabel* receivedHeader = new QLabel("Получено");
     receivedHeader->setAlignment(Qt::AlignCenter);
     receivedHeader->setStyleSheet("font-size: 20px; font-weight: bold;");
 
-    auto* receivedView = new QListView;
+    receivedView = new QListView;
     auto* receivedModel = new GoalsTableModel(receivedView);
     receivedModel->setGoalSource(allGoals);
     receivedModel->setFilterTag("Получено");
     receivedModel->applyFilters();
 
-    receivedView->setItemDelegate(new QStyledItemDelegate(receivedView));
+    receivedView->setItemDelegate(new KanbanDelegate(receivedView));
+    receivedView->setSpacing(10);
+    receivedView->setUniformItemSizes(true);
+    receivedView->setStyleSheet(R"(
+        QListView {
+            background-color: rgba(228, 220, 197, 1);
+            border: 3px solid black;
+            padding: 10px;
+        }
+        QListView::item {
+            border: none;
+            background: none;
+        }
+        QListView::item:selected {
+            background: none;
+            border: none;
+        }
+    )");
     receivedView->setModel(receivedModel);
     receivedView->setModelColumn(NameColumn);
 
@@ -882,32 +1075,67 @@ void MainWindow::createPagesWithoutOwnership()
     inProgressHeader->setAlignment(Qt::AlignCenter);
     inProgressHeader->setStyleSheet("font-size: 20px; font-weight: bold;");
 
-    auto* inProgressView = new QListView;
+    inProgressView = new QListView;
     auto* inProgressModel = new GoalsTableModel(inProgressView);
     inProgressModel->setGoalSource(allGoals);
     inProgressModel->setFilterTag("В работе");
     inProgressModel->applyFilters();
 
-    inProgressView->setItemDelegate(new QStyledItemDelegate(inProgressView));
+    inProgressView->setItemDelegate(new KanbanDelegate(inProgressView));
+    inProgressView->setSpacing(10);
+    inProgressView->setUniformItemSizes(true);
+    inProgressView->setStyleSheet(R"(
+        QListView {
+            background-color: rgba(228, 220, 197, 1);
+            border: 3px solid black;
+            padding: 10px;
+        }
+        QListView::item {
+            border: none;
+            background: none;
+        }
+        QListView::item:selected {
+            background: none;
+            border: none;
+        }
+    )");
     inProgressView->setModel(inProgressModel);
     inProgressView->setModelColumn(NameColumn);
 
     inProgressLayout->addWidget(inProgressHeader);
     inProgressLayout->addWidget(inProgressView);
 
+    // Выполнено
     QWidget* doneColumn = new QWidget;
     auto* doneLayout = new QVBoxLayout(doneColumn);
     QLabel* doneHeader = new QLabel("Выполнено");
     doneHeader->setAlignment(Qt::AlignCenter);
     doneHeader->setStyleSheet("font-size: 20px; font-weight: bold;");
 
-    auto* doneView = new QListView;
+    doneView = new QListView;
     auto* doneModel = new GoalsTableModel(doneView);
     doneModel->setGoalSource(allGoals);
     doneModel->setFilterTag("Выполнено");
     doneModel->applyFilters();
 
-    doneView->setItemDelegate(new QStyledItemDelegate(doneView));
+    doneView->setItemDelegate(new KanbanDelegate(doneView));
+    doneView->setSpacing(10);
+    doneView->setUniformItemSizes(true);
+    doneView->setStyleSheet(R"(
+        QListView {
+            background-color: rgba(228, 220, 197, 1);
+            border: 3px solid black;
+            padding: 10px;
+        }
+        QListView::item {
+            border: none;
+            background: none;
+        }
+        QListView::item:selected {
+            background: none;
+            border: none;
+        }
+    )");
     doneView->setModel(doneModel);
     doneView->setModelColumn(NameColumn);
 
@@ -918,11 +1146,11 @@ void MainWindow::createPagesWithoutOwnership()
     kanbanLayout->addWidget(inProgressColumn);
     kanbanLayout->addWidget(doneColumn);
 
-    // Сохраняем модели канбана, если нужно будет обновлять
-//    kanbanModels.clear();
-//    kanbanModels.append(receivedModel);
-//    kanbanModels.append(inProgressModel);
-//    kanbanModels.append(doneModel);
+    // Сохраняем модели канбана для доступа
+    kanbanModels.clear();
+    kanbanModels.append(receivedModel);
+    kanbanModels.append(inProgressModel);
+    kanbanModels.append(doneModel);
 
     qDebug() << "Finished createPagesWithoutOwnership()";
 }
@@ -1125,121 +1353,7 @@ void MainWindow::openFolder(bool newness)
 
 //------------------DATA---------------------------------------------------------------------------------
 
-ChoosableObjectsList::ChoosableObjectsList(QObject* parent)
-    : QAbstractListModel(parent)
-{
-}
 
-int ChoosableObjectsList::rowCount(const QModelIndex&) const{
-    return m_items.size();
-}
-
-Qt::ItemFlags ChoosableObjectsList::flags(const QModelIndex& index) const
-{
-    if (!index.isValid())
-        return Qt::NoItemFlags;
-
-    return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
-}
-
-QVariant ChoosableObjectsList::data(const QModelIndex& index, int role) const
-{
-    if(!index.isValid())
-        return {};
-
-    const auto* item = m_items[index.row()];
-
-    switch(role){
-        case Qt::DisplayRole:
-            return item->name;
-        case NameRole:
-            return item->name;
-        case SelectedRole:
-            return item->selected;
-        case IdRole:
-            return item->id;
-        }
-    return {};
-}
-
-void ChoosableObjectsList::select(int row)
-{
-    for(int i = 0; i < m_items.size(); ++i){
-        m_items[i]->selected = (i == row);
-    }
-    emit dataChanged(index(0), index(m_items.size() - 1));
-}
-
-
-void ChoosableObjectsList::add(ChoosableObject* item)
-{
-    beginInsertRows(QModelIndex(), m_items.size(), m_items.size());
-    m_items.push_back(item);
-    endInsertRows();
-}
-
-
-void ChoosableObjectsList::removeAt(int row)
-{
-    if (row < 0 || row >= m_items.size())
-        return;
-
-    beginRemoveRows(QModelIndex(), row, row);
-    delete m_items[row];
-    m_items.removeAt(row);
-    endRemoveRows();
-}
-
-
-QVariant TagsList::data(const QModelIndex& index, int role) const{
-    if(!index.isValid())
-        return {};
-
-    auto* tag = dynamic_cast<Tag*>(m_items[index.row()]);
-    if(!tag){
-        return {};
-    }
-
-    switch(role){
-        case ColorRole:
-            return tag->color;
-        case InKanbanRole:
-            return tag->in_kanban;
-        }
-    return ChoosableObjectsList::data(index, role);
-}
-
-QVariant GoalsList::data(const QModelIndex& index, int role) const{
-    if(!index.isValid())
-        return {};
-
-    auto* goal = dynamic_cast<Goal*>(m_items[index.row()]);
-    if(!goal){
-        return {};
-    }
-
-    switch(role){
-        case DescriptionRole:
-            return goal->description;
-        case TypeRole:
-            return goal->type;
-        case CurrentRole:
-            return goal->current;
-        case TargetRole:
-            return goal->target;
-        case SubgoalsRole:
-            return goal->subgoalIds;
-        case DeadlineRole:
-            return goal->deadline;
-        case TagRole:
-            return goal->tagIds;
-        case FolderRole:
-            return goal->folderId;
-        case ParentRole:
-            return goal->parentId;
-        }
-    return ChoosableObjectsList::data(index, role);
-}
 
 
 TabsList* MainWindow::importTabsFromJson(){
@@ -1291,6 +1405,11 @@ TagsList* MainWindow::importTagsFromJson(){
     return tagsModel;
 }
 
+
+
+//-------------------------------------------------------------------------------
+
+
 FoldersList* MainWindow::importFoldersFromJson(){
     QFile json(QString(*mainPathToSource + "\\DATA\\FOLDERS.json"));
     if (!json.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -1314,34 +1433,6 @@ FoldersList* MainWindow::importFoldersFromJson(){
 
     return foldersModel;
 }
-
-
-Goal* GoalsList::nearestGoal(const QDateTime& now) const
-{
-    Goal* nearest = nullptr;
-    qint64 minDiff = LLONG_MAX;
-
-    for (auto* item : m_items) {
-        auto* goal = dynamic_cast<Goal*>(item);
-        if (!goal)
-            continue;
-
-        if (!goal->deadline.isValid())
-            continue;
-
-        qint64 diff = now.secsTo(goal->deadline);
-        if (diff >= 0 && diff < minDiff) {
-            minDiff = diff;
-            nearest = goal;
-        }
-    }
-    return nearest;
-}
-
-//-------------------------------------------------------------------------------
-
-
-
 
 //QVector<Goal*> MainWindow::importGoalsFromJson()
 //{
@@ -2566,34 +2657,89 @@ void MainWindow::openAbout()
 }
 
 
+//void MainWindow::saveGoalsToJson()
+//{
+////    QJsonArray arr;
+
+////    for (Goal* g : goalsModel->goals()) {
+////        QJsonObject o;
+////        o["id"] = g->id;
+////        o["name"] = g->name;
+////        o["description"] = g->description;
+////        o["type"] = g->type;
+////        o["deadline"] = g->deadline.toString(Qt::ISODate);
+////        o["tagIds"] = QJsonArray::fromStringList(g->tagIds);
+////        o["folderId"] = g->folderId;
+
+////        arr.append(o);
+////    }
+
+////    QJsonObject root;
+////    root["goals"] = arr;
+
+////    QFile f(*mainPathToSource + "\\DATA\\GOALS.json");
+////    if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
+////        return;
+
+////    f.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+////    f.close();
+//}
+
 void MainWindow::saveGoalsToJson()
 {
-//    QJsonArray arr;
+    QJsonArray goalsArray;
 
-//    for (Goal* g : goalsModel->goals()) {
-//        QJsonObject o;
-//        o["id"] = g->id;
-//        o["name"] = g->name;
-//        o["description"] = g->description;
-//        o["type"] = g->type;
-//        o["deadline"] = g->deadline.toString(Qt::ISODate);
-//        o["tagIds"] = QJsonArray::fromStringList(g->tagIds);
-//        o["folderId"] = g->folderId;
+    for (Goal* goal : allGoals) {
+        QJsonObject goalObject;
+        goalObject["id"] = goal->id;
+        goalObject["name"] = goal->name;
+        goalObject["description"] = goal->description;
+        goalObject["type"] = goal->type;
+        goalObject["current"] = goal->current;
+        goalObject["target"] = goal->target;
 
-//        arr.append(o);
-//    }
+        // Сохраняем подцели
+        QJsonArray subgoalArray;
+        for (const QString& subId : goal->subgoalIds) {
+            subgoalArray.append(subId);
+        }
+        goalObject["subgoalIds"] = subgoalArray;
 
-//    QJsonObject root;
-//    root["goals"] = arr;
+        // Сохраняем дедлайн
+        if (goal->deadline.isValid()) {
+            goalObject["deadline"] = goal->deadline.toString(Qt::ISODate);
+        } else {
+            goalObject["deadline"] = QString();
+        }
 
-//    QFile f(*mainPathToSource + "\\DATA\\GOALS.json");
-//    if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
-//        return;
+        // Сохраняем тэги
+        QJsonArray tagsArray;
+        for (const QString& tagId : goal->tagIds) {
+            tagsArray.append(tagId);
+        }
+        goalObject["tagIds"] = tagsArray;
 
-//    f.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
-//    f.close();
+        goalObject["folderId"] = goal->folderId;
+
+        goalsArray.append(goalObject);
+    }
+
+    QJsonObject rootObject;
+    rootObject["goals"] = goalsArray;
+
+    QJsonDocument doc(rootObject);
+
+    QString goalsPath = *mainPathToSource + "\\DATA\\GOALS.json";
+    QFile file(goalsPath);
+
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        file.write(doc.toJson(QJsonDocument::Indented));
+        file.close();
+        qDebug() << "Goals saved to JSON:" << goalsArray.size() << "goals";
+    } else {
+        qDebug() << "Error saving goals to JSON";
+    }
 }
-
 
 void MainWindow::openCreateGoalDialog()
 {
@@ -2622,7 +2768,253 @@ void MainWindow::endDay(){
 
 }
 
-//const QVector<Goal*>& GoalsTableModel::goals() const
+
+//void MainWindow::onGoalSelected(const QModelIndex& current, const QModelIndex& previous)
 //{
-//    return m_goals;
+//    Q_UNUSED(previous);
+
+//    if (!current.isValid()) {
+//        selectedGoalId.clear();
+//        updateDeleteButtonState();
+//        return;
+//    }
+
+//    // Получаем ID цели
+//    QVariant idVar = current.data(GoalsTableModel::IdRole);
+//    QString currentGoalId = idVar.isValid() ? idVar.toString() : "";
+
+//    // Если клик по той же цели
+//    if (currentGoalId == lastClickedGoalId) {
+//        clickCount++;
+
+//        if (clickCount == 2) {
+//            clickTimer->stop();
+//            clickCount = 0;
+//            // Здесь в будущем можно вызвать редактирование
+//            qDebug() << "Double click on goal:" << currentGoalId;
+//            // Пока что просто снимаем выделение
+//            clearCurrentSelection();
+//            return;
+//        }
+//    } else {
+//        lastClickedGoalId = currentGoalId;
+//        clickCount = 1;
+//    }
+
+//    clickTimer->start();
+
+//    selectedGoalId = currentGoalId;
+//    updateDeleteButtonState();
 //}
+
+void MainWindow::onGoalSelected(const QModelIndex& current, const QModelIndex& previous)
+{
+    // Если текущий индекс невалиден - сбрасываем выделение
+    if (!current.isValid()) {
+        selectedGoalId.clear();
+        updateDeleteButtonState();
+        return;
+    }
+
+    // Получаем ID цели
+    QVariant idVar = current.data(GoalsTableModel::IdRole);
+    QString currentGoalId = idVar.isValid() ? idVar.toString() : "";
+
+    // Проверяем, выбрана ли уже эта цель
+    if (currentGoalId == selectedGoalId) {
+        // Если клик по уже выделенной цели - снимаем выделение
+        clearCurrentSelection(currentGoalId);
+    } else {
+        // Иначе выделяем новую цель
+        selectedGoalId = currentGoalId;
+        updateDeleteButtonState();
+    }
+}
+
+void MainWindow::onSingleClick()
+{
+    if (clickCount == 1) {
+        // Одиночный клик - просто выделяем
+        clickCount = 0;
+        // Ничего дополнительного не делаем, выбор уже установлен
+    }
+}
+
+void MainWindow::clearCurrentSelection(const QString& goalId)
+{
+    // Снимаем выделение только если это та же цель
+    if (goalId != selectedGoalId) return;
+
+    // Находим и снимаем выделение во всех представлениях
+    if (incomingView && incomingView->selectionModel()) {
+        incomingView->selectionModel()->clearSelection();
+    }
+    if (todayView && todayView->selectionModel()) {
+        todayView->selectionModel()->clearSelection();
+    }
+    if (calendarList && calendarList->selectionModel()) {
+        calendarList->selectionModel()->clearSelection();
+    }
+
+    selectedGoalId.clear();
+    updateDeleteButtonState();
+}
+void MainWindow::updateDeleteButtonState()
+{
+    bool hasSelection = !selectedGoalId.isEmpty();
+
+    // Обновляем стиль кнопки
+    if (hasSelection) {
+        ui->deleteButton->setEnabled(true);
+        ui->deleteButton->setStyleSheet(
+            "QPushButton {"
+            "    background-color: rgba(239, 85, 85, 0.9);"  // Более яркий красный
+            "    border: 2px solid black;"
+            "}"
+            "QPushButton:hover {"
+            "    background-color: rgba(255, 100, 100, 1);"
+            "}"
+            "QPushButton:pressed {"
+            "    background-color: rgba(219, 65, 65, 1);"
+            "}"
+        );
+        ui->deleteButton->setIcon(QIcon(QString(*mainPathToSource + "\\IMG\\on_trash.png")));
+    } else {
+        ui->deleteButton->setEnabled(false);
+        ui->deleteButton->setStyleSheet(
+            "QPushButton {"
+            "    background-color: rgba(239, 85, 85, 0.3);"
+            "    border: 2px solid black;"
+            "}"
+        );
+        ui->deleteButton->setIcon(QIcon(QString(*mainPathToSource + "\\IMG\\off_trash.png")));
+    }
+}
+
+void MainWindow::deleteSelectedGoal()
+{
+    if (selectedGoalId.isEmpty()) {
+        QMessageBox::warning(this, "Ошибка", "Не выбрана цель для удаления");
+        return;
+    }
+
+    // Находим цель
+    Goal* goalToDelete = nullptr;
+    for (Goal* goal : allGoals) {
+        if (goal->id == selectedGoalId) {
+            goalToDelete = goal;
+            break;
+        }
+    }
+
+    if (!goalToDelete) {
+        QMessageBox::warning(this, "Ошибка", "Цель не найдена");
+        return;
+    }
+
+    // Диалог подтверждения
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Подтверждение удаления",
+                                 QString("Вы уверены, что хотите удалить цель \"%1\"?\n"
+                                        "Это действие нельзя отменить.")
+                                 .arg(goalToDelete->name),
+                                 QMessageBox::Yes | QMessageBox::No);
+
+    if (reply != QMessageBox::Yes) {
+        return;
+    }
+
+    // Удаляем цель
+    if (deleteGoalById(selectedGoalId)) {
+        // Сохраняем изменения в JSON
+        saveGoalsToJson();
+
+        // Обновляем все модели
+        updateAllModels();
+
+        // Сбрасываем выделение
+        selectedGoalId.clear();
+        updateDeleteButtonState();
+
+        QMessageBox::information(this, "Успех", "Цель успешно удалена");
+    } else {
+        QMessageBox::warning(this, "Ошибка", "Не удалось удалить цель");
+    }
+}
+
+bool MainWindow::deleteGoalById(const QString& goalId)
+{
+    // Находим и удаляем цель
+    for (int i = 0; i < allGoals.size(); ++i) {
+        if (allGoals[i]->id == goalId) {
+            Goal* goal = allGoals[i];
+
+            // Сначала удаляем дочерние цели (если есть)
+            if (!goal->subgoalIds.isEmpty()) {
+                // Спрашиваем о дочерних целях
+                QMessageBox::StandardButton reply;
+                reply = QMessageBox::question(this, "Дочерние цели",
+                                             "У этой цели есть дочерние цели. "
+                                             "Удалить их тоже?",
+                                             QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+
+                if (reply == QMessageBox::Cancel) {
+                    return false;
+                } else if (reply == QMessageBox::Yes) {
+                    deleteSubgoals(goal->subgoalIds);
+                }
+                // Если No - просто удаляем родительскую цель
+            }
+
+            // Удаляем цель из всех моделей
+            if (todayModel) todayModel->removeGoal(goalId);
+            if (incomingModel) incomingModel->removeGoal(goalId);
+            if (calendarModel) calendarModel->removeGoal(goalId);
+
+            // Удаляем из основного списка
+            delete allGoals[i];  // Освобождаем память
+            allGoals.removeAt(i);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void MainWindow::deleteSubgoals(const QStringList& subgoalIds)
+{
+    for (const QString& subgoalId : subgoalIds) {
+        deleteGoalById(subgoalId);
+    }
+}
+
+void MainWindow::updateAllModels()
+{
+    // Обновляем все модели
+    if (todayModel) {
+        todayModel->applyFilters();
+    }
+    if (incomingModel) {
+        incomingModel->applyFilters();
+    }
+    if (calendarModel) {
+        calendarModel->applyFilters();
+    }
+}
+
+void MainWindow::clearAllSelections()
+{
+    if (incomingView && incomingView->selectionModel()) {
+        incomingView->selectionModel()->clearSelection();
+    }
+    if (todayView && todayView->selectionModel()) {
+        todayView->selectionModel()->clearSelection();
+    }
+    if (calendarList && calendarList->selectionModel()) {
+        calendarList->selectionModel()->clearSelection();
+    }
+
+    selectedGoalId.clear();
+    updateDeleteButtonState();
+}

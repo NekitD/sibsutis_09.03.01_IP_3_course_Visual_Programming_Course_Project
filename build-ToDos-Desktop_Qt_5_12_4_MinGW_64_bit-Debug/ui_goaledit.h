@@ -42,37 +42,51 @@ public:
     {
         if (GoalEdit->objectName().isEmpty())
             GoalEdit->setObjectName(QString::fromUtf8("GoalEdit"));
-        GoalEdit->resize(648, 915);
+        GoalEdit->resize(648, 877);
         buttonBox = new QDialogButtonBox(GoalEdit);
         buttonBox->setObjectName(QString::fromUtf8("buttonBox"));
-        buttonBox->setGeometry(QRect(60, 820, 541, 71));
+        buttonBox->setGeometry(QRect(60, 780, 541, 71));
         buttonBox->setOrientation(Qt::Horizontal);
         buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
         label = new QLabel(GoalEdit);
         label->setObjectName(QString::fromUtf8("label"));
         label->setGeometry(QRect(190, 10, 281, 51));
+        QFont font;
+        font.setPointSize(20);
+        font.setBold(true);
+        font.setWeight(75);
+        label->setFont(font);
         label->setAlignment(Qt::AlignCenter);
         lineEdit = new QLineEdit(GoalEdit);
         lineEdit->setObjectName(QString::fromUtf8("lineEdit"));
         lineEdit->setGeometry(QRect(30, 120, 591, 51));
         label_2 = new QLabel(GoalEdit);
         label_2->setObjectName(QString::fromUtf8("label_2"));
-        label_2->setGeometry(QRect(50, 90, 81, 21));
+        label_2->setGeometry(QRect(40, 90, 111, 21));
+        QFont font1;
+        font1.setPointSize(14);
+        label_2->setFont(font1);
         plainTextEdit = new QPlainTextEdit(GoalEdit);
         plainTextEdit->setObjectName(QString::fromUtf8("plainTextEdit"));
-        plainTextEdit->setGeometry(QRect(30, 210, 591, 251));
+        plainTextEdit->setGeometry(QRect(30, 230, 591, 251));
         label_3 = new QLabel(GoalEdit);
         label_3->setObjectName(QString::fromUtf8("label_3"));
-        label_3->setGeometry(QRect(50, 190, 81, 16));
+        label_3->setGeometry(QRect(40, 200, 111, 21));
+        QFont font2;
+        font2.setPointSize(12);
+        label_3->setFont(font2);
         radioButton = new QRadioButton(GoalEdit);
         radioButton->setObjectName(QString::fromUtf8("radioButton"));
-        radioButton->setGeometry(QRect(120, 480, 111, 21));
+        radioButton->setGeometry(QRect(90, 490, 131, 21));
+        radioButton->setFont(font2);
         radioButton_2 = new QRadioButton(GoalEdit);
         radioButton_2->setObjectName(QString::fromUtf8("radioButton_2"));
-        radioButton_2->setGeometry(QRect(260, 480, 97, 22));
+        radioButton_2->setGeometry(QRect(250, 490, 151, 22));
+        radioButton_2->setFont(font2);
         radioButton_3 = new QRadioButton(GoalEdit);
         radioButton_3->setObjectName(QString::fromUtf8("radioButton_3"));
-        radioButton_3->setGeometry(QRect(400, 480, 97, 22));
+        radioButton_3->setGeometry(QRect(410, 490, 141, 22));
+        radioButton_3->setFont(font2);
         label_4 = new QLabel(GoalEdit);
         label_4->setObjectName(QString::fromUtf8("label_4"));
         label_4->setGeometry(QRect(40, 570, 55, 16));
@@ -87,8 +101,8 @@ public:
         tagsButton->setGeometry(QRect(30, 710, 591, 51));
 
         retranslateUi(GoalEdit);
-        QObject::connect(buttonBox, SIGNAL(accepted()), GoalEdit, SLOT(accept()));
         QObject::connect(buttonBox, SIGNAL(rejected()), GoalEdit, SLOT(reject()));
+        QObject::connect(buttonBox, SIGNAL(accepted()), GoalEdit, SLOT(accept()));
 
         QMetaObject::connectSlotsByName(GoalEdit);
     } // setupUi

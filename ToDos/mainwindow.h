@@ -8,6 +8,7 @@
 #include <QSortFilterProxyModel>
 #include <QLabel>
 #include <QListView>
+#include <QTableView>
 #include <QStyledItemDelegate>
 #include <QStackedWidget>
 #include "objects.h"
@@ -22,22 +23,6 @@ class MainWindow;
 
 class TimeDesk;
 class NearEventDesk;
-
-
-enum TagRoles{
-    ColorRole = Qt::UserRole + 10,
-    InKanbanRole
-};
-
-
-enum Roles {
-    IdRole = Qt::UserRole + 1,
-    NameRole,
-    SelectedRole,
-    TypeRole
-};
-
-
 
 
 
@@ -111,6 +96,12 @@ private:
     QWidget* createKanbanPage(const QVector<Goal*>&);
     void onTabChanged(const QString& tabId);
 
+    QMap<QString, QWidget*> tagPages;
+       QMap<QString, GoalsTableModel*> tagModels;
+
+    QWidget* createTagPage(const QString& tagId, const QString& tagName, const QString& tagColor);
+    void onTagSelected(const QString& tagId, const QString& tagName, const QString& tagColor);
+
     void showNotificationsMenu();
     QList<Notification> notifications;
     void loadNotifications();
@@ -129,17 +120,43 @@ private:
 
     QPushButton* addGoalButton = nullptr;
 
+    QString selectedGoalId;
+    GoalsTableModel* currentActiveModel;
 
+    void updateDeleteButtonState();
+
+    bool deleteGoalById(const QString& goalId);
+
+    void deleteSubgoals(const QStringList& subgoalIds);
+    void updateAllModels();
+
+    QTableView* incomingView = nullptr;
+    QTableView* todayView = nullptr;
+    QListView* calendarList = nullptr;
+    QListView* receivedView = nullptr;
+    QListView* inProgressView = nullptr;
+    QListView* doneView = nullptr;
+
+    QList<GoalsTableModel*> kanbanModels;
+
+    void clearAllSelections();
+
+    QTimer* clickTimer = nullptr;
+    QString lastClickedGoalId;
+    int clickCount = 0;
+
+    void onSingleClick();
+    void clearCurrentSelection(const QString& goalId);
 
 private slots:
     void openFolder(bool newness);
     void openAbout();
     void openNearGoal();
     void endDay();
-    void openAddGoal();
+    void openAddGoal(bool newness);
     void openCreateGoalDialog();
-
-
+    void onGoalSelected(const QModelIndex& current, const QModelIndex& previous);
+    void deleteSelectedGoal();
 };
 
 

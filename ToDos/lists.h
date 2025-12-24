@@ -5,6 +5,21 @@
 #include <QAbstractListModel>
 #include "objects.h"
 
+
+enum TagRoles{
+    ColorRole = Qt::UserRole + 10,
+    InKanbanRole
+};
+
+
+enum Roles {
+    IdRole = Qt::UserRole + 1,
+    NameRole,
+    SelectedRole,
+    TypeRole
+};
+
+
 class ChoosableObjectsList;
 class FoldersList;
 class TabsList;

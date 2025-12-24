@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>648</width>
-    <height>915</height>
+    <height>877</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>60</x>
-     <y>820</y>
+     <y>780</y>
      <width>541</width>
      <height>71</height>
     </rect>
@@ -37,6 +37,13 @@
      <width>281</width>
      <height>51</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>20</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
    </property>
    <property name="text">
     <string>Редактор цели</string>
@@ -58,11 +65,16 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>50</x>
+     <x>40</x>
      <y>90</y>
-     <width>81</width>
+     <width>111</width>
      <height>21</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>14</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>Название</string>
@@ -72,7 +84,7 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>210</y>
+     <y>230</y>
      <width>591</width>
      <height>251</height>
     </rect>
@@ -81,11 +93,16 @@
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>50</x>
-     <y>190</y>
-     <width>81</width>
-     <height>16</height>
+     <x>40</x>
+     <y>200</y>
+     <width>111</width>
+     <height>21</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>Описание</string>
@@ -94,11 +111,16 @@
   <widget class="QRadioButton" name="radioButton">
    <property name="geometry">
     <rect>
-     <x>120</x>
-     <y>480</y>
-     <width>111</width>
+     <x>90</x>
+     <y>490</y>
+     <width>131</width>
      <height>21</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>Обычная</string>
@@ -107,11 +129,16 @@
   <widget class="QRadioButton" name="radioButton_2">
    <property name="geometry">
     <rect>
-     <x>260</x>
-     <y>480</y>
-     <width>97</width>
+     <x>250</x>
+     <y>490</y>
+     <width>151</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>Накопление</string>
@@ -120,11 +147,16 @@
   <widget class="QRadioButton" name="radioButton_3">
    <property name="geometry">
     <rect>
-     <x>400</x>
-     <y>480</y>
-     <width>97</width>
+     <x>410</x>
+     <y>490</y>
+     <width>141</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>Составная</string>
@@ -187,22 +219,6 @@
  <connections>
   <connection>
    <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>GoalEdit</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
    <signal>rejected()</signal>
    <receiver>GoalEdit</receiver>
    <slot>reject()</slot>
@@ -213,6 +229,22 @@
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>GoalEdit</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
      <y>274</y>
     </hint>
    </hints>

@@ -6,7 +6,6 @@
 #include "objects.h"
 #include "delegates.h"
 
-class GoalsFilterModel;
 class GoalsTableModel;
 
 
@@ -39,11 +38,30 @@ public:
     void setGoals(const QVector<Goal*>& goals);
     void addGoal(Goal* g);
 
-    enum {
-        TagRole = Qt::UserRole + 1,
-        DeadlineRole,
-        FolderRole
-    };
+
+    bool removeGoal(const QString& goalId);
+
+
+    Goal* findGoalById(const QString& goalId) const;
+    int findRowById(const QString& goalId) const;
+
+
+    enum GoalsRoles {
+            // Базовые роли (Qt уже имеет DisplayRole, EditRole, etc)
+            IdRole = Qt::UserRole + 10,      // Начинаем с 10 для безопасности
+            NameRole = Qt::UserRole + 11,
+            DescriptionRole = Qt::UserRole + 12,
+            TypeRole = Qt::UserRole + 13,
+            CurrentRole = Qt::UserRole + 14,
+            TargetRole = Qt::UserRole + 15,
+            DeadlineRole = Qt::UserRole + 16,
+            TagRole = Qt::UserRole + 17,
+            FolderRole = Qt::UserRole + 18,
+            ParentRole = Qt::UserRole + 19,
+            SubgoalsRole = Qt::UserRole + 20
+        };
+
+     Q_ENUM(GoalsRoles)
 
     void setFilterTodayOnly(bool todayOnly);
     void setFilterTag(const QString& tag);
@@ -61,6 +79,9 @@ public:
     QString m_tagFilter;
     QString m_folderFilter;
     QDate m_dateFilter;
+
+signals:
+    void dataChangedExternally();
 };
 
 

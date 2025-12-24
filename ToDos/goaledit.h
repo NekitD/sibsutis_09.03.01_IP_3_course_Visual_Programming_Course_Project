@@ -12,7 +12,7 @@ class GoalEdit : public QDialog
 {
     Q_OBJECT
 public:
-    explicit GoalEdit(QWidget *parent = nullptr);
+    explicit GoalEdit(QWidget *parent = nullptr, bool newness = true, QString* mainPathToSource = nullptr);
 //    explicit GoalEdit(TagsList* tagsModel, QWidget* parent = nullptr);
     ~GoalEdit();
 

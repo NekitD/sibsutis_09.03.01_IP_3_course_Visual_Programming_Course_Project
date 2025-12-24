@@ -46,4 +46,28 @@ public:
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
     QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 };
+
+
+class CalendarDelegate : public QStyledItemDelegate
+{
+public:
+    explicit CalendarDelegate(QObject* parent = nullptr);
+
+    void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+
+    QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+};
+
+
+class KanbanDelegate : public QStyledItemDelegate
+{
+public:
+    explicit KanbanDelegate(QObject* parent = nullptr);
+
+    void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+
+    QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+};
+
+
 #endif // DELEGATES_H
