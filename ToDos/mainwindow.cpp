@@ -321,75 +321,74 @@ MainWindow::MainWindow(QWidget *parent) :
                  //};
             });
 
-    goalsModel = new GoalsTableModel(this);
-    goalsModel->setGoals(importGoalsFromJson());
 
-    goalsFilter = new GoalsFilterModel(this);
-    goalsFilter->setSourceModel(goalsModel);
+    allGoals = importGoalsFromJson();
+        qDebug() << "Loaded" << allGoals.size() << "goals";
 
-    goalsStack = new QStackedWidget(ui->GoalsWidget);
+        // Главная модель владеет целями
+        mainGoalsModel = new GoalsTableModel(this);
+        mainGoalsModel->setGoalSource(allGoals);
 
-    todayPage = createTodayPage();
-    incomingPage = createIncomingPage();
-    calendarPage = createCalendarPage();
-    kanbanPage = createKanbanPage();
+        // Создаем QStackedWidget
+        goalsStack = new QStackedWidget(ui->GoalsWidget);
 
-    goalsStack->addWidget(todayPage);
-    goalsStack->addWidget(incomingPage);
-    goalsStack->addWidget(calendarPage);
-    goalsStack->addWidget(kanbanPage);
+        // Создаем страницы
+        createPagesWithoutOwnership();
 
-//    auto* layout = new QVBoxLayout(ui->GoalsWidget);
-//    layout->setContentsMargins(0, 0, 0, 0);
-//    layout->addWidget(goalsStack);
-//    ui->GoalsWidget->setLayout(layout);
-    auto* grid = new QGridLayout(ui->GoalsWidget);
-    grid->setContentsMargins(1, 1, 1, 1);
-    grid->setSpacing(0);
+        // Добавляем страницы в стек
+//        goalsStack->addWidget(todayPage);
+//        goalsStack->addWidget(incomingPage);
+//        goalsStack->addWidget(calendarPage);
+//        goalsStack->addWidget(kanbanPage);
 
-    // основной контент
-    grid->addWidget(goalsStack, 0, 0);
+//        // Остальной код layout...
+//        auto* grid = new QGridLayout(ui->GoalsWidget);
+//        grid->setContentsMargins(1, 1, 1, 1);
+//        grid->setSpacing(0);
 
-    addGoalButton = new QPushButton("+", ui->GoalsWidget);
-    addGoalButton->setFixedSize(70, 70);
-    addGoalButton->setCursor(Qt::PointingHandCursor);
+//        grid->addWidget(goalsStack, 0, 0);
 
-    addGoalButton->setStyleSheet(R"(
-        QPushButton {
-            background-color: rgba(165, 224, 155, 1);
-            border: 3px solid white;
-            border-radius: 35px;
-            color: white;
-            font-size: 60px;
-            font-weight: bold;
-            padding-bottom: 8px;
-        }
-        QPushButton:hover {
-            background-color: rgba(145, 210, 135, 1);
-        }
-        QPushButton:pressed {
-            background-color: rgba(120, 190, 110, 1);
-        }
-    )");
+//        addGoalButton = new QPushButton("+", ui->GoalsWidget);
+//        addGoalButton->setFixedSize(70, 70);
+//        addGoalButton->setCursor(Qt::PointingHandCursor);
 
-    grid->addWidget(addGoalButton, 0, 0,
-                    Qt::AlignRight | Qt::AlignBottom);
+//        addGoalButton->setStyleSheet(R"(
+//            QPushButton {
+//                background-color: rgba(165, 224, 155, 1);
+//                border: 3px solid white;
+//                border-radius: 35px;
+//                color: white;
+//                font-size: 60px;
+//                font-weight: bold;
+//                padding-bottom: 8px;
+//            }
+//            QPushButton:hover {
+//                background-color: rgba(145, 210, 135, 1);
+//            }
+//            QPushButton:pressed {
+//                background-color: rgba(120, 190, 110, 1);
+//            }
+//        )");
 
-    ui->GoalsWidget->setLayout(grid);
+//        grid->addWidget(addGoalButton, 0, 0,
+//                        Qt::AlignRight | Qt::AlignBottom);
 
-    connect(addGoalButton, &QPushButton::clicked, this, &MainWindow::openAddGoal);
-//    connect(addGoalButton, &QPushButton::clicked, this, [this]() {
-//        GoalEdit dlg(this);
-//        if (dlg.exec() == QDialog::Accepted) {
-//            Goal* g = dlg.createdGoal();
-//            goalsModel->addGoal(g);
-//            saveGoalsToJson();
-//        }
-//    });
+//        ui->GoalsWidget->setLayout(grid);
+
+//        connect(addGoalButton, &QPushButton::clicked, this, &MainWindow::openAddGoal);
 }
+
+
 
 MainWindow::~MainWindow()
 {
+    // Удаляем mainGoalsModel (она НЕ удаляет цели)
+    delete mainGoalsModel;
+
+    // Удаляем цели ВРУЧНУЮ
+    qDeleteAll(allGoals);
+    allGoals.clear();
+
     delete ui;
 }
 
@@ -432,26 +431,23 @@ void MainWindow::saveFoldersToJson()
 }
 
 
-QWidget* MainWindow::createIncomingPage()
+QWidget* MainWindow::createIncomingPage(const QVector<Goal*>& goals)
 {
     QWidget* page = new QWidget;
-    auto* layout = new QVBoxLayout(page);
-    layout->setContentsMargins(0, 0, 0, 0);
+        auto* layout = new QVBoxLayout(page);
+        layout->setContentsMargins(0, 0, 0, 0);
 
-    auto* view = new QTableView;
-    view->setSelectionBehavior(QAbstractItemView::SelectRows);
-    view->setSelectionMode(QAbstractItemView::SingleSelection);
-    view->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    view->setFocusPolicy(Qt::NoFocus);
+        auto* view = new QTableView;
+        view->setSelectionBehavior(QAbstractItemView::SelectRows);
+        view->setSelectionMode(QAbstractItemView::SingleSelection);
+        view->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        view->setFocusPolicy(Qt::NoFocus);
 
-    auto* filter = new GoalsFilterModel(view);
-    filter->setSourceModel(goalsModel);
-    filter->setTodayOnly(false);
-    filter->setDateFilter(QDate());
-    filter->setTagFilter("");
+        GoalsTableModel* model = new GoalsTableModel(view);
+        model->setGoalSource(goals);  // Используем переданные цели
 
-    view->setModel(filter);
-    view->setItemDelegate(new GoalsDelegate(view));
+        view->setModel(model);
+        view->setItemDelegate(new GoalsDelegate(view));
 
     view->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     view->verticalHeader()->setVisible(false);
@@ -498,26 +494,27 @@ QWidget* MainWindow::createIncomingPage()
 }
 
 
-QWidget* MainWindow::createTodayPage()
+QWidget* MainWindow::createTodayPage(const QVector<Goal*>& goals)
 {
     QWidget* page = new QWidget;
-    auto* layout = new QVBoxLayout(page);
-    layout->setContentsMargins(0, 0, 0, 0);
+        auto* layout = new QVBoxLayout(page);
+        layout->setContentsMargins(0, 0, 0, 0);
 
-    auto* view = new QTableView;
-    view->setSelectionBehavior(QAbstractItemView::SelectRows);
-    view->setSelectionMode(QAbstractItemView::SingleSelection);
-    view->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    view->setFocusPolicy(Qt::NoFocus);
+        auto* view = new QTableView;
+        view->setSelectionBehavior(QAbstractItemView::SelectRows);
+        view->setSelectionMode(QAbstractItemView::SingleSelection);
+        view->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        view->setFocusPolicy(Qt::NoFocus);
 
-    goalsFilter->setTodayOnly(true);
+        GoalsTableModel* todayModel = new GoalsTableModel(view);
+        todayModel->setGoalSource(goals);  // Используем переданные цели
+        //todayModel->setFilterTodayOnly(true);
+        todayModel->applyFilters();
 
-    auto* filter = new GoalsFilterModel(view);
-    filter->setSourceModel(goalsModel);
-    filter->setTodayOnly(true);
+        qDebug() << "Today page: filtered" << todayModel->rowCount() << "goals";
 
-    view->setModel(filter);
-    view->setItemDelegate(new GoalsDelegate(view));
+        view->setModel(todayModel);
+        view->setItemDelegate(new GoalsDelegate(view));
     view->setStyleSheet(R"(
             QTableView {
                 background-color: rgba(228, 220, 197, 1);
@@ -559,7 +556,7 @@ QWidget* MainWindow::createTodayPage()
     return page;
 }
 
-QWidget* MainWindow::createCalendarPage()
+QWidget* MainWindow::createCalendarPage(const QVector<Goal*>& goals)
 {
     QWidget* page = new QWidget;
     auto* layout = new QHBoxLayout(page);
@@ -571,17 +568,19 @@ QWidget* MainWindow::createCalendarPage()
     calendar->setStyleSheet("background-color: rgba(246, 245, 201, 1)");
     list->setStyleSheet("background-color: rgba(228, 220, 197, 1)");
 
-    auto* model = new GoalsFilterModel(this);
-    model->setSourceModel(goalsModel);
+    auto* model = new GoalsTableModel(this);
+    model->setGoalSource(goals);  // Используем переданные цели
+   // model->setFilterDate(QDate::currentDate());
+    model->applyFilters();
 
-
-    model->setDateFilter(QDate::currentDate());
-
+    list->setItemDelegate(new QStyledItemDelegate(list));
     list->setModel(model);
+    list->setModelColumn(NameColumn);
 
     connect(calendar, &QCalendarWidget::clicked,
             this, [model](const QDate& date){
-        model->setDateFilter(date);
+        //model->setFilterDate(date);
+        model->applyFilters();
     });
 
     layout->addWidget(list, 2);
@@ -590,7 +589,7 @@ QWidget* MainWindow::createCalendarPage()
     return page;
 }
 
-QWidget* MainWindow::createKanbanColumn(const QString& tagName)
+QWidget* MainWindow::createKanbanColumn(const QString& tagName, const QVector<Goal*>& goals)
 {
     QWidget* col = new QWidget;
     auto* layout = new QVBoxLayout(col);
@@ -599,54 +598,305 @@ QWidget* MainWindow::createKanbanColumn(const QString& tagName)
     header->setAlignment(Qt::AlignCenter);
     header->setStyleSheet("font-size: 20px; font-weight: bold;");
 
-    auto* view = new QListView;
-
-    auto* model = new GoalsFilterModel(this);
-    model->setSourceModel(goalsModel);
-    model->setTagFilter(tagName);
+    auto* view = new QListView(col);
+    auto* model = new GoalsTableModel(view);
+    model->setGoalSource(goals);  // Тот же набор целей
+    //model->setFilterTag(tagName);
+    model->applyFilters();
 
     view->setModel(model);
-    view->setModelColumn(0);
+    view->setModelColumn(NameColumn);
 
     layout->addWidget(header);
     layout->addWidget(view);
     return col;
 }
 
-QWidget* MainWindow::createKanbanPage()
+QWidget* MainWindow::createKanbanPage(const QVector<Goal*>& goals)
 {
     QWidget* page = new QWidget;
     auto* layout = new QHBoxLayout(page);
 
-    layout->addWidget(createKanbanColumn("Получено"));
-    layout->addWidget(createKanbanColumn("В работе"));
-    layout->addWidget(createKanbanColumn("Выполнено"));
+    // Используем переданные цели
+    auto createColumn = [&goals](const QString& tagName) {
+        QWidget* col = new QWidget;
+        auto* colLayout = new QVBoxLayout(col);
+
+        QLabel* header = new QLabel(tagName);
+        header->setAlignment(Qt::AlignCenter);
+        header->setStyleSheet("font-size: 20px; font-weight: bold;");
+
+        auto* view = new QListView;
+
+        auto* model = new GoalsTableModel(view);
+        model->setGoalSource(goals);  // Используем переданные цели
+       // model->setFilterTag(tagName);
+        model->applyFilters();
+
+        qDebug() << "Kanban column" << tagName << "has" << model->rowCount() << "goals";
+
+        view->setItemDelegate(new QStyledItemDelegate(view));
+        view->setModel(model);
+        view->setModelColumn(NameColumn);
+
+        colLayout->addWidget(header);
+        colLayout->addWidget(view);
+        return col;
+    };
+
+    layout->addWidget(createColumn("Получено"));
+    layout->addWidget(createColumn("В работе"));
+    layout->addWidget(createColumn("Выполнено"));
 
     return page;
 }
 
 void MainWindow::onTabChanged(const QString& tabId)
 {
-    goalsFilter->setTodayOnly(false);
-    goalsFilter->setDateFilter(QDate());
-    goalsFilter->setTagFilter("");
-
     if (tabId == "today") {
-        goalsFilter->setTodayOnly(true);
-        goalsStack->setCurrentWidget(todayPage);
-    }
-    else if (tabId == "all") {
-        goalsStack->setCurrentWidget(incomingPage);
-    }
-    else if (tabId == "calendar") {
+        QTableView* tableView = qobject_cast<QTableView*>(todayPage->findChild<QTableView*>());
+        if (tableView) {
+             GoalsTableModel* model = qobject_cast<GoalsTableModel*>(tableView->model());
+             if (model) {
+                // model->setFilterTodayOnly(true);
+                 model->applyFilters();
+                 qDebug() << "Today tab: showing" << model->rowCount() << "goals";
+              }
+          }
+         goalsStack->setCurrentWidget(todayPage);
+     }
+       else if (tabId == "all") {
+            goalsStack->setCurrentWidget(incomingPage);
+    } else if (tabId == "calendar"){
         goalsStack->setCurrentWidget(calendarPage);
-    }
-    else if (tabId == "kanban") {
+    } else if (tabId == "kanban"){
         goalsStack->setCurrentWidget(kanbanPage);
     }
 }
 
+void MainWindow::createPagesWithoutOwnership()
+{
+    qDebug() << "Starting createPagesWithoutOwnership()";
+    // Today page
+    qDebug() << "Creating today page...";
+    todayPage = new QWidget;
+    auto* todayLayout = new QVBoxLayout(todayPage);
+    todayLayout->setContentsMargins(0, 0, 0, 0);
 
+
+    auto* todayView = new QTableView(todayPage);
+    qDebug() << "Created todayView";
+    todayView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    todayView->setSelectionMode(QAbstractItemView::SingleSelection);
+    todayView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    todayView->setFocusPolicy(Qt::NoFocus);
+
+    qDebug() << "Creating todayModel...";
+    todayModel = new GoalsTableModel(todayView);
+    qDebug() << "Setting goals for todayModel...";
+
+    todayModel->setGoalSource(allGoals); // ПЕРЕДАЁМ ССЫЛКУ, НЕ КОПИЮ
+    todayModel->setFilterTodayOnly(true);
+    todayModel->applyFilters();
+
+    qDebug() << "Setting model for todayView...";
+    todayView->setModel(todayModel);
+    //todayView->setItemDelegate(new GoalsDelegate(todayView));
+    todayView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    todayView->verticalHeader()->setVisible(false);
+    todayView->verticalHeader()->setDefaultSectionSize(80);
+
+    todayView->setStyleSheet(R"(
+        QTableView {
+            background-color: rgba(228, 220, 197, 1);
+            border: 3px solid black;
+            font-size: 16px;
+            selection-background-color: rgba(255, 230, 160, 1);
+            padding-top: 0px;
+            padding-bottom: 0px;
+            padding-left: 0px;
+            padding-right: 0px;
+        }
+        QTableView::item {
+            background-color: rgba(255, 250, 230, 1);
+            border: 1px solid black;
+        }
+        QTableView::item:selected {
+            background-color: rgba(255, 235, 180, 1);
+        }
+    )");
+
+    todayView->horizontalHeader()->setStyleSheet(R"(
+        QHeaderView::section {
+            background-color: rgba(247, 232, 179, 1);
+            border: 0px solid black;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 1px;
+            font-style: italic;
+        }
+    )");
+
+    todayLayout->addWidget(todayView);
+
+    // Incoming page
+    incomingPage = new QWidget;
+    auto* incomingLayout = new QVBoxLayout(incomingPage);
+    incomingLayout->setContentsMargins(0, 0, 0, 0);
+
+    auto* incomingView = new QTableView(incomingPage);
+    incomingView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    incomingView->setSelectionMode(QAbstractItemView::SingleSelection);
+    incomingView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    incomingView->setFocusPolicy(Qt::NoFocus);
+
+    incomingModel = new GoalsTableModel(incomingView);
+    incomingModel->setGoalSource(allGoals);
+
+    incomingView->setModel(incomingModel);
+    incomingView->setItemDelegate(new GoalsDelegate(incomingView));
+    incomingView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    incomingView->verticalHeader()->setVisible(false);
+    incomingView->verticalHeader()->setDefaultSectionSize(80);
+
+    incomingView->setStyleSheet(R"(
+        QTableView {
+            background-color: rgba(228, 220, 197, 1);
+            border: 3px solid black;
+            font-size: 16px;
+            selection-background-color: rgba(255, 230, 160, 1);
+            padding-top: 0px;
+            padding-bottom: 0px;
+            padding-left: 0px;
+            padding-right: 0px;
+        }
+        QTableView::item {
+            background-color: rgba(255, 250, 230, 1);
+            border: 1px solid black;
+        }
+        QTableView::item:selected {
+            background-color: rgba(255, 235, 180, 1);
+        }
+    )");
+
+    incomingView->horizontalHeader()->setStyleSheet(R"(
+        QHeaderView::section {
+            background-color: rgba(247, 232, 179, 1);
+            border: 0px solid black;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 1px;
+            font-style: italic;
+        }
+    )");
+
+    incomingLayout->addWidget(incomingView);
+
+    // Calendar page
+    calendarPage = new QWidget;
+    auto* calendarLayout = new QHBoxLayout(calendarPage);
+    calendarLayout->setContentsMargins(0, 0, 0, 0);
+
+    auto* calendarList = new QListView(calendarPage);
+    auto* calendarWidget = new QCalendarWidget(calendarPage);
+
+    calendarWidget->setStyleSheet("background-color: rgba(246, 245, 201, 1)");
+    calendarList->setStyleSheet("background-color: rgba(228, 220, 197, 1)");
+
+    calendarModel = new GoalsTableModel(calendarList);
+    calendarModel->setGoalSource(allGoals);
+    calendarModel->setFilterDate(QDate::currentDate());
+    calendarModel->applyFilters();
+
+    calendarList->setItemDelegate(new QStyledItemDelegate(calendarList));
+    calendarList->setModel(calendarModel);
+    calendarList->setModelColumn(NameColumn);
+
+    connect(calendarWidget, &QCalendarWidget::clicked,
+            this, [this](const QDate& date){
+        calendarModel->setFilterDate(date);
+        calendarModel->applyFilters();
+    });
+
+    calendarLayout->addWidget(calendarList, 2);
+    calendarLayout->addWidget(calendarWidget, 1);
+
+    // Kanban page
+    kanbanPage = new QWidget;
+    auto* kanbanLayout = new QHBoxLayout(kanbanPage);
+    kanbanLayout->setContentsMargins(0, 0, 0, 0);
+
+    // Создаем колонки канбана
+    QWidget* receivedColumn = new QWidget;
+    auto* receivedLayout = new QVBoxLayout(receivedColumn);
+    QLabel* receivedHeader = new QLabel("Получено");
+    receivedHeader->setAlignment(Qt::AlignCenter);
+    receivedHeader->setStyleSheet("font-size: 20px; font-weight: bold;");
+
+    auto* receivedView = new QListView;
+    auto* receivedModel = new GoalsTableModel(receivedView);
+    receivedModel->setGoalSource(allGoals);
+    receivedModel->setFilterTag("Получено");
+    receivedModel->applyFilters();
+
+    receivedView->setItemDelegate(new QStyledItemDelegate(receivedView));
+    receivedView->setModel(receivedModel);
+    receivedView->setModelColumn(NameColumn);
+
+    receivedLayout->addWidget(receivedHeader);
+    receivedLayout->addWidget(receivedView);
+
+    // В работе
+    QWidget* inProgressColumn = new QWidget;
+    auto* inProgressLayout = new QVBoxLayout(inProgressColumn);
+    QLabel* inProgressHeader = new QLabel("В работе");
+    inProgressHeader->setAlignment(Qt::AlignCenter);
+    inProgressHeader->setStyleSheet("font-size: 20px; font-weight: bold;");
+
+    auto* inProgressView = new QListView;
+    auto* inProgressModel = new GoalsTableModel(inProgressView);
+    inProgressModel->setGoalSource(allGoals);
+    inProgressModel->setFilterTag("В работе");
+    inProgressModel->applyFilters();
+
+    inProgressView->setItemDelegate(new QStyledItemDelegate(inProgressView));
+    inProgressView->setModel(inProgressModel);
+    inProgressView->setModelColumn(NameColumn);
+
+    inProgressLayout->addWidget(inProgressHeader);
+    inProgressLayout->addWidget(inProgressView);
+
+    QWidget* doneColumn = new QWidget;
+    auto* doneLayout = new QVBoxLayout(doneColumn);
+    QLabel* doneHeader = new QLabel("Выполнено");
+    doneHeader->setAlignment(Qt::AlignCenter);
+    doneHeader->setStyleSheet("font-size: 20px; font-weight: bold;");
+
+    auto* doneView = new QListView;
+    auto* doneModel = new GoalsTableModel(doneView);
+    doneModel->setGoalSource(allGoals);
+    doneModel->setFilterTag("Выполнено");
+    doneModel->applyFilters();
+
+    doneView->setItemDelegate(new QStyledItemDelegate(doneView));
+    doneView->setModel(doneModel);
+    doneView->setModelColumn(NameColumn);
+
+    doneLayout->addWidget(doneHeader);
+    doneLayout->addWidget(doneView);
+
+    kanbanLayout->addWidget(receivedColumn);
+    kanbanLayout->addWidget(inProgressColumn);
+    kanbanLayout->addWidget(doneColumn);
+
+    // Сохраняем модели канбана, если нужно будет обновлять
+//    kanbanModels.clear();
+//    kanbanModels.append(receivedModel);
+//    kanbanModels.append(inProgressModel);
+//    kanbanModels.append(doneModel);
+
+    qDebug() << "Finished createPagesWithoutOwnership()";
+}
 
 
 //-----------------------------------------------------------------------------------------------------------------
@@ -1064,6 +1314,41 @@ Goal* GoalsList::nearestGoal(const QDateTime& now) const
 
 
 
+//QVector<Goal*> MainWindow::importGoalsFromJson()
+//{
+//    QVector<Goal*> result;
+
+//    QFile file(*mainPathToSource + "\\DATA\\GOALS.json");
+//    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+//        return result;
+
+//    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+//    QJsonArray arr = doc.object()["goals"].toArray();
+
+//    for (const auto& v : arr) {
+//        QJsonObject o = v.toObject();
+
+//        Goal* g = new Goal;
+//        g->id = o["id"].toString();
+//        g->name = o["name"].toString();
+//        g->description = o["description"].toString();
+//        g->type = o["type"].toString();
+//        g->current = o["current"].toInt();
+//        g->target = o["target"].toInt();
+//        g->folderId = o["folderId"].toString();
+//        g->parentId = o["parentId"].toString();
+//        g->deadline = QDateTime::fromString(o["deadline"].toString(), Qt::ISODate);
+
+//        for (auto t : o["tagIds"].toArray())
+//            g->tagIds << t.toString();
+
+//        result.push_back(g);
+//    }
+
+//    return result;
+//}
+
+
 QVector<Goal*> MainWindow::importGoalsFromJson()
 {
     QVector<Goal*> result;
@@ -1087,7 +1372,24 @@ QVector<Goal*> MainWindow::importGoalsFromJson()
         g->target = o["target"].toInt();
         g->folderId = o["folderId"].toString();
         g->parentId = o["parentId"].toString();
-        g->deadline = QDateTime::fromString(o["deadline"].toString(), Qt::ISODate);
+
+        QString deadlineStr = o["deadline"].toString();
+        qDebug() << "Parsing deadline string:" << deadlineStr;
+
+        if (!deadlineStr.isEmpty()) {
+            g->deadline = QDateTime::fromString(deadlineStr, Qt::ISODate);
+            if (!g->deadline.isValid()) {
+                g->deadline = QDateTime::fromString(deadlineStr, "yyyy-MM-ddTHH:mm:ss");
+            }
+            if (!g->deadline.isValid()) {
+                g->deadline = QDateTime::fromString(deadlineStr, "yyyy-MM-dd");
+            }
+        }
+
+        qDebug() << "Parsed deadline valid:" << g->deadline.isValid();
+        if (g->deadline.isValid()) {
+            qDebug() << "Deadline:" << g->deadline.toString("yyyy-MM-dd HH:mm:ss");
+        }
 
         for (auto t : o["tagIds"].toArray())
             g->tagIds << t.toString();
@@ -1097,6 +1399,8 @@ QVector<Goal*> MainWindow::importGoalsFromJson()
 
     return result;
 }
+
+
 
 void MainWindow::loadNotifications() {
     notifications.clear();
@@ -1619,16 +1923,16 @@ void MainWindow::showFilterMenu()
     filterMenu->deleteLater();
 }
 
-void MainWindow::applyFilters(const QStringList& filters)
-{
+//void MainWindow::applyFilters(const QStringList& filters)
+//{
 
-    qDebug() << "Применяем фильтры:" << filters;
+//    qDebug() << "Применяем фильтры:" << filters;
 
-    // if (goalsFilterModel) {
-    //     goalsFilterModel->setFilterData(filters);
-    //     goalsFilterModel->invalidateFilter();
-    // }
-}
+//    // if (goalsFilterModel) {
+//    //     goalsFilterModel->setFilterData(filters);
+//    //     goalsFilterModel->invalidateFilter();
+//    // }
+//}
 
 
 AppSettings MainWindow::loadSettings()
@@ -2235,30 +2539,30 @@ void MainWindow::openAbout()
 
 void MainWindow::saveGoalsToJson()
 {
-    QJsonArray arr;
+//    QJsonArray arr;
 
-    for (Goal* g : goalsModel->goals()) {
-        QJsonObject o;
-        o["id"] = g->id;
-        o["name"] = g->name;
-        o["description"] = g->description;
-        o["type"] = g->type;
-        o["deadline"] = g->deadline.toString(Qt::ISODate);
-        o["tagIds"] = QJsonArray::fromStringList(g->tagIds);
-        o["folderId"] = g->folderId;
+//    for (Goal* g : goalsModel->goals()) {
+//        QJsonObject o;
+//        o["id"] = g->id;
+//        o["name"] = g->name;
+//        o["description"] = g->description;
+//        o["type"] = g->type;
+//        o["deadline"] = g->deadline.toString(Qt::ISODate);
+//        o["tagIds"] = QJsonArray::fromStringList(g->tagIds);
+//        o["folderId"] = g->folderId;
 
-        arr.append(o);
-    }
+//        arr.append(o);
+//    }
 
-    QJsonObject root;
-    root["goals"] = arr;
+//    QJsonObject root;
+//    root["goals"] = arr;
 
-    QFile f(*mainPathToSource + "\\DATA\\GOALS.json");
-    if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
-        return;
+//    QFile f(*mainPathToSource + "\\DATA\\GOALS.json");
+//    if (!f.open(QIODevice::WriteOnly | QIODevice::Text))
+//        return;
 
-    f.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
-    f.close();
+//    f.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+//    f.close();
 }
 
 
@@ -2268,19 +2572,19 @@ void MainWindow::openCreateGoalDialog()
 
     if (dlg.exec() == QDialog::Accepted) {
         Goal* goal = dlg.createGoal();
-        goalsModel->addGoal(goal);
+//        goalsModel->addGoal(goal);
         saveGoalsToJson();
     }
 }
 
-void GoalsTableModel::addGoal(Goal* goal)
-{
-    int row = m_goals.size();
+//void GoalsTableModel::addGoal(Goal* goal)
+//{
+//    int row = m_goals.size();
 
-    beginInsertRows(QModelIndex(), row, row);
-    m_goals.append(goal);
-    endInsertRows();
-}
+//    beginInsertRows(QModelIndex(), row, row);
+//    m_goals.append(goal);
+//    endInsertRows();
+//}
 
 void MainWindow::openNearGoal(){
 
@@ -2289,7 +2593,7 @@ void MainWindow::endDay(){
 
 }
 
-const QVector<Goal*>& GoalsTableModel::goals() const
-{
-    return m_goals;
-}
+//const QVector<Goal*>& GoalsTableModel::goals() const
+//{
+//    return m_goals;
+//}

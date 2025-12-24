@@ -92,13 +92,23 @@ private:
     QWidget* kanbanPage;
 
     GoalsTableModel* goalsModel;
-    GoalsFilterModel* goalsFilter;
+    QVector<Goal*> allGoals;
 
-    QWidget* createIncomingPage();
-    QWidget* createTodayPage();
-    QWidget* createKanbanColumn(const QString& tagName);
-    QWidget* createCalendarPage();
-    QWidget* createKanbanPage();
+    GoalsTableModel* mainGoalsModel;
+
+    GoalsTableModel* todayModel;
+    GoalsTableModel* incomingModel;
+    GoalsTableModel* calendarModel;
+    GoalsTableModel* kanbanModel;
+
+    void refreshAllModels();
+    void createPagesWithoutOwnership();
+
+    QWidget* createIncomingPage(const QVector<Goal*>&);
+    QWidget* createTodayPage(const QVector<Goal*>&);
+    QWidget* createKanbanColumn(const QString& tagName, const QVector<Goal*>& goals);
+    QWidget* createCalendarPage(const QVector<Goal*>&);
+    QWidget* createKanbanPage(const QVector<Goal*>&);
     void onTabChanged(const QString& tabId);
 
     void showNotificationsMenu();

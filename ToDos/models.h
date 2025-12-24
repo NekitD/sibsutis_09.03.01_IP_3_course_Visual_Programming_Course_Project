@@ -23,31 +23,11 @@ enum GoalsRoles {
 };
 
 
-class GoalsFilterModel : public QSortFilterProxyModel {
-    Q_OBJECT
-public:
-    explicit GoalsFilterModel(QObject* parent = nullptr);
-
-    void setTodayOnly(bool on);
-    void setTagFilter(const QString& tagId);
-    void setFolderFilter(const QString& folderId);
-    void setDateFilter(const QDate& date);
-
-protected:
-    bool filterAcceptsRow(int row,
-                          const QModelIndex& parent) const override;
-
-private:
-    bool m_todayOnly = false;
-    QString m_tagId;
-    QString m_folderId;
-    QDate m_date;
-};
-
 class GoalsTableModel : public QAbstractTableModel {
     Q_OBJECT
 public:
     explicit GoalsTableModel(QObject* parent = nullptr);
+    //~GoalsTableModel() override;
 
     int rowCount(const QModelIndex& = QModelIndex()) const override;
     int columnCount(const QModelIndex& = QModelIndex()) const override;
@@ -65,7 +45,22 @@ public:
         FolderRole
     };
 
-    QVector<Goal*> m_goals;
+    void setFilterTodayOnly(bool todayOnly);
+    void setFilterTag(const QString& tag);
+    void setFilterFolder(const QString& folder);
+    void setFilterDate(const QDate& date);
+
+    void setGoalSource(const QVector<Goal*>& goals);
+
+    void applyFilters();
+
+    const QVector<Goal*>* m_sourceGoals = nullptr; // Указатель на чужие данные
+    QVector<Goal*> m_filteredGoals;
+
+    bool m_todayOnly = false;
+    QString m_tagFilter;
+    QString m_folderFilter;
+    QDate m_dateFilter;
 };
 
 
