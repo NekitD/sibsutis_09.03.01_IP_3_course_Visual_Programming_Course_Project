@@ -335,57 +335,54 @@ MainWindow::MainWindow(QWidget *parent) :
         // Создаем страницы
         createPagesWithoutOwnership();
 
-        // Добавляем страницы в стек
-//        goalsStack->addWidget(todayPage);
-//        goalsStack->addWidget(incomingPage);
-//        goalsStack->addWidget(calendarPage);
-//        goalsStack->addWidget(kanbanPage);
+        goalsStack->addWidget(todayPage);
+        goalsStack->addWidget(incomingPage);
+        goalsStack->addWidget(calendarPage);
+        goalsStack->addWidget(kanbanPage);
 
-//        // Остальной код layout...
-//        auto* grid = new QGridLayout(ui->GoalsWidget);
-//        grid->setContentsMargins(1, 1, 1, 1);
-//        grid->setSpacing(0);
+        // Остальной код layout...
+        auto* grid = new QGridLayout(ui->GoalsWidget);
+        grid->setContentsMargins(1, 1, 1, 1);
+        grid->setSpacing(0);
 
-//        grid->addWidget(goalsStack, 0, 0);
+        grid->addWidget(goalsStack, 0, 0);
 
-//        addGoalButton = new QPushButton("+", ui->GoalsWidget);
-//        addGoalButton->setFixedSize(70, 70);
-//        addGoalButton->setCursor(Qt::PointingHandCursor);
+        addGoalButton = new QPushButton("+", ui->GoalsWidget);
+        addGoalButton->setFixedSize(70, 70);
+        addGoalButton->setCursor(Qt::PointingHandCursor);
 
-//        addGoalButton->setStyleSheet(R"(
-//            QPushButton {
-//                background-color: rgba(165, 224, 155, 1);
-//                border: 3px solid white;
-//                border-radius: 35px;
-//                color: white;
-//                font-size: 60px;
-//                font-weight: bold;
-//                padding-bottom: 8px;
-//            }
-//            QPushButton:hover {
-//                background-color: rgba(145, 210, 135, 1);
-//            }
-//            QPushButton:pressed {
-//                background-color: rgba(120, 190, 110, 1);
-//            }
-//        )");
+        addGoalButton->setStyleSheet(R"(
+            QPushButton {
+                background-color: rgba(165, 224, 155, 1);
+                border: 3px solid white;
+                border-radius: 35px;
+                color: white;
+                font-size: 60px;
+                font-weight: bold;
+                padding-bottom: 8px;
+            }
+            QPushButton:hover {
+                background-color: rgba(145, 210, 135, 1);
+            }
+            QPushButton:pressed {
+                background-color: rgba(120, 190, 110, 1);
+            }
+        )");
 
-//        grid->addWidget(addGoalButton, 0, 0,
-//                        Qt::AlignRight | Qt::AlignBottom);
+        grid->addWidget(addGoalButton, 0, 0,
+                        Qt::AlignRight | Qt::AlignBottom);
 
-//        ui->GoalsWidget->setLayout(grid);
+        ui->GoalsWidget->setLayout(grid);
 
-//        connect(addGoalButton, &QPushButton::clicked, this, &MainWindow::openAddGoal);
+        connect(addGoalButton, &QPushButton::clicked, this, &MainWindow::openAddGoal);
 }
 
 
 
 MainWindow::~MainWindow()
 {
-    // Удаляем mainGoalsModel (она НЕ удаляет цели)
     delete mainGoalsModel;
 
-    // Удаляем цели ВРУЧНУЮ
     qDeleteAll(allGoals);
     allGoals.clear();
 
@@ -446,8 +443,8 @@ QWidget* MainWindow::createIncomingPage(const QVector<Goal*>& goals)
         GoalsTableModel* model = new GoalsTableModel(view);
         model->setGoalSource(goals);  // Используем переданные цели
 
-        view->setModel(model);
-        view->setItemDelegate(new GoalsDelegate(view));
+    view->setModel(model);
+    view->setItemDelegate(new GoalsDelegate(view));
 
     view->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     view->verticalHeader()->setVisible(false);
@@ -515,7 +512,7 @@ QWidget* MainWindow::createTodayPage(const QVector<Goal*>& goals)
 
         view->setModel(todayModel);
         view->setItemDelegate(new GoalsDelegate(view));
-    view->setStyleSheet(R"(
+        view->setStyleSheet(R"(
             QTableView {
                 background-color: rgba(228, 220, 197, 1);
                 border: 3px solid black;
@@ -582,6 +579,38 @@ QWidget* MainWindow::createCalendarPage(const QVector<Goal*>& goals)
         //model->setFilterDate(date);
         model->applyFilters();
     });
+
+
+    calendar->setStyleSheet(R"(
+            QCalendarWidget {
+                background-color: rgba(246, 245, 201, 1);
+                font-size: 14px;
+            }
+            QCalendarWidget QToolButton {
+                font-size: 16px;
+                font-weight: bold;
+            }
+        )");
+
+        list->setStyleSheet(R"(
+            QListView {
+                background-color: rgba(228, 220, 197, 1);
+                border: 3px solid black;
+                font-size: 14px;
+            }
+            QListView::item {
+                background-color: rgba(255, 250, 230, 1);
+                border: 1px solid black;
+                padding: 8px;
+                margin: 1px;
+                font-size: 50px;
+            }
+            QListView::item:selected {
+                background-color: rgba(255, 235, 180, 1);
+                font-weight: bold;
+            }
+        )");
+
 
     layout->addWidget(list, 2);
     layout->addWidget(calendar, 1);
@@ -701,7 +730,7 @@ void MainWindow::createPagesWithoutOwnership()
 
     qDebug() << "Setting model for todayView...";
     todayView->setModel(todayModel);
-    //todayView->setItemDelegate(new GoalsDelegate(todayView));
+    todayView->setItemDelegate(new GoalsDelegate(todayView));
     todayView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     todayView->verticalHeader()->setVisible(false);
     todayView->verticalHeader()->setDefaultSectionSize(80);
