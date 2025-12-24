@@ -259,6 +259,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->searchButton->setToolTip("Искать");
     ui->searchButton->setCursor(Qt::PointingHandCursor);
 
+    connect(ui->searchButton, &QPushButton::clicked, this, &MainWindow::onSearchButtonClicked);
+
     ui->filterButton->setStyleSheet("QPushButton{background-color: rgba(205, 247, 198, 1); border: 2px solid black}");
     ui->filterButton->setIcon(QIcon(QString(*mainPathToSource + "\\IMG\\filter.svg")));
     ui->filterButton->setIconSize(ui->filterButton->size());
@@ -463,6 +465,8 @@ MainWindow::MainWindow(QWidget *parent) :
             if (n_timeDesk) {
                     connect(n_timeDesk, &TimeDesk::clicked, this, &MainWindow::endDay);
                 }
+            setupContextMenuForSearch();
+            connect(ui->searchString, &QLineEdit::returnPressed, this, &MainWindow::onSearchButtonClicked);
 }
 
 
@@ -3474,4 +3478,95 @@ void TimeDesk::mousePressEvent(QMouseEvent *event)
         emit clicked();
     }
     QWidget::mousePressEvent(event);
+}
+
+void MainWindow::onSearchButtonClicked()
+{
+    currentSearchText = ui->searchString->text().trimmed();
+    performSearch();
+}
+
+void MainWindow::performSearch()
+{
+    applySearchToCurrentTab();
+}
+
+void MainWindow::applySearchToCurrentTab()
+{
+    QWidget* currentPage = goalsStack->currentWidget();
+
+    if (currentPage == todayPage) {
+        if (todayModel) {
+            todayModel->setSearchFilter(currentSearchText);
+            todayModel->applyFilters();
+        }
+    } else if (currentPage == incomingPage) {
+        if (incomingModel) {
+            incomingModel->setSearchFilter(currentSearchText);
+            incomingModel->applyFilters();
+        }
+    } else if (currentPage == calendarPage) {
+        if (calendarModel) {
+            calendarModel->setSearchFilter(currentSearchText);
+            calendarModel->applyFilters();
+        }
+    }
+
+    for (GoalsTableModel* model : tagModels.values()) {
+        if (model) {
+            model->setSearchFilter(currentSearchText);
+            model->applyFilters();
+        }
+    }
+
+    for (GoalsTableModel* model : kanbanModels) {
+        if (model) {
+            model->setSearchFilter(currentSearchText);
+            model->applyFilters();
+        }
+    }
+}
+
+void MainWindow::keyPressEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) {
+        if (ui->searchString->hasFocus()) {
+            performSearch();
+            return;
+        }
+    } else if (event->key() == Qt::Key_Escape) {
+        if (ui->searchString->hasFocus()) {
+            ui->searchString->clear();
+            performSearch();
+            return;
+        }
+    } else if (event->key() == Qt::Key_F && event->modifiers() == Qt::ControlModifier) {
+        ui->searchString->setFocus();
+        ui->searchString->selectAll();
+        return;
+    }
+
+    QMainWindow::keyPressEvent(event);
+}
+
+void MainWindow::setupContextMenuForSearch()
+{
+    // Добавляем контекстное меню для строки поиска
+    ui->searchString->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->searchString, &QLineEdit::customContextMenuRequested,
+            this, [this](const QPoint& pos) {
+        QMenu* menu = ui->searchString->createStandardContextMenu();
+
+        // Добавляем свой пункт меню
+        menu->addSeparator();
+        QAction* clearAction = new QAction("Очистить и сбросить поиск", menu);
+        connect(clearAction, &QAction::triggered, this, [this]() {
+            ui->searchString->clear();
+            performSearch();
+        });
+        menu->addAction(clearAction);
+
+        menu->exec(ui->searchString->mapToGlobal(pos));
+        menu->deleteLater();
+    });
 }

@@ -39,54 +39,99 @@ void GoalsTableModel::setGoalSource(const QVector<Goal*>& goals) {
     endResetModel();
 }
 
-void GoalsTableModel::applyFilters() {
-    qDebug() << "Applying filters: todayOnly=" << m_todayOnly
-             << ", tagFilter=" << m_tagFilter
-             << ", dateFilter=" << m_dateFilter.toString("yyyy-MM-dd");
+//void GoalsTableModel::applyFilters() {
+//    qDebug() << "Applying filters: todayOnly=" << m_todayOnly
+//             << ", tagFilter=" << m_tagFilter
+//             << ", dateFilter=" << m_dateFilter.toString("yyyy-MM-dd");
 
-    beginResetModel();
+//    beginResetModel();
 
-    m_filteredGoals.clear();
-    if (!m_sourceGoals) {
-        qDebug() << "No source goals!";
-        endResetModel();
-        return;
-    }
+//    m_filteredGoals.clear();
+//    if (!m_sourceGoals) {
+//        qDebug() << "No source goals!";
+//        endResetModel();
+//        return;
+//    }
 
-    qDebug() << "Source has" << m_sourceGoals->size() << "goals";
+//    qDebug() << "Source has" << m_sourceGoals->size() << "goals";
+
+//    for (Goal* goal : *m_sourceGoals) {
+//        bool accept = true;
+
+//        if (m_todayOnly) {
+//            if (!goal->deadline.isValid() ||
+//                goal->deadline.date() != QDate::currentDate()) {
+//                accept = false;
+//            }
+//        }
+
+//        if (accept && !m_tagFilter.isEmpty()) {
+//            if (!goal->tagIds.contains(m_tagFilter)) {
+//                accept = false;
+//            }
+//        }
+
+//        if (accept && m_dateFilter.isValid()) {
+//            if (!goal->deadline.isValid() ||
+//                goal->deadline.date() != m_dateFilter) {
+//                accept = false;
+//            }
+//        }
+
+//        if (accept) {
+//            m_filteredGoals.push_back(goal);
+//        }
+//    }
+
+//    qDebug() << "Filtered to" << m_filteredGoals.size() << "goals";
+//    endResetModel();
+//}
+
+void GoalsTableModel::applyFilters()
+{
+    QVector<Goal*> filteredGoals;
 
     for (Goal* goal : *m_sourceGoals) {
-        bool accept = true;
+        bool passesFilters = true;
 
-        if (m_todayOnly) {
-            if (!goal->deadline.isValid() ||
-                goal->deadline.date() != QDate::currentDate()) {
-                accept = false;
+        if (m_dateFilter.isValid() && goal->deadline.isValid()) {
+            if (goal->deadline.date() != m_dateFilter) {
+                passesFilters = false;
             }
         }
 
-        if (accept && !m_tagFilter.isEmpty()) {
+
+        if (!m_tagFilter.isEmpty() && passesFilters) {
             if (!goal->tagIds.contains(m_tagFilter)) {
-                accept = false;
+                passesFilters = false;
             }
         }
 
-        if (accept && m_dateFilter.isValid()) {
-            if (!goal->deadline.isValid() ||
-                goal->deadline.date() != m_dateFilter) {
-                accept = false;
+        if (m_todayOnly && passesFilters) {
+            QDate today = QDate::currentDate();
+            if (!goal->deadline.isValid() || goal->deadline.date() != today) {
+                passesFilters = false;
             }
         }
 
-        if (accept) {
-            m_filteredGoals.push_back(goal);
+        if (!m_searchText.isEmpty() && passesFilters) {
+            QString name = goal->name.toLower();
+            QString description = goal->description.toLower();
+
+            if (!name.contains(m_searchText) && !description.contains(m_searchText)) {
+                passesFilters = false;
+            }
+        }
+
+        if (passesFilters) {
+            filteredGoals.append(goal);
         }
     }
 
-    qDebug() << "Filtered to" << m_filteredGoals.size() << "goals";
+    beginResetModel();
+    m_filteredGoals = filteredGoals;
     endResetModel();
 }
-
 
 int GoalsTableModel::rowCount(const QModelIndex&) const {
     return m_filteredGoals.size();
@@ -225,3 +270,8 @@ int GoalsTableModel::findRowById(const QString& goalId) const
     return -1;
 }
 
+void GoalsTableModel::setSearchFilter(const QString& searchText)
+{
+    m_searchText = searchText.trimmed().toLower();
+    applyFilters();
+}

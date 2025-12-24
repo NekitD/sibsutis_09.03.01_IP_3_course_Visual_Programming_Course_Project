@@ -167,9 +167,15 @@ private:
 
     void showEndDayDialog();
 
+    void applySearchToCurrentTab();
+    QString currentSearchText;
+
+    void setupContextMenuForSearch();
+
 protected:
     void closeEvent(QCloseEvent *event) override;
     void changeEvent(QEvent *event) override;
+    void keyPressEvent(QKeyEvent* event) override;
 
 private slots:
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
@@ -183,9 +189,13 @@ private slots:
     void deleteSelectedGoal();
     void openNearestGoal(const QString& goalId);
     void endDay();
+    void onSearchButtonClicked();
+    //void onSearchTextChanged(const QString& text);
+    void performSearch();
 ;
 signals:
     void modelsDataChanged();
+
 };
 
 

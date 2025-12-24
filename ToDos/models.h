@@ -80,6 +80,10 @@ public:
     QString m_folderFilter;
     QDate m_dateFilter;
 
+    void setSearchFilter(const QString& searchText);
+private:
+    QString m_searchText;
+
 signals:
     void dataChangedExternally();
 };
