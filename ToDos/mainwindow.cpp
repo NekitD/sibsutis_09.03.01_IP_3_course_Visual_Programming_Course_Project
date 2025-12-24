@@ -2999,44 +2999,105 @@ void MainWindow::deleteSelectedGoal()
     }
 }
 
+//bool MainWindow::deleteGoalById(const QString& goalId)
+//{
+//    // Находим и удаляем цель
+//    for (int i = 0; i < allGoals.size(); ++i) {
+//        if (allGoals[i]->id == goalId) {
+//            Goal* goal = allGoals[i];
+
+//            // Сначала удаляем дочерние цели (если есть)
+//            if (!goal->subgoalIds.isEmpty()) {
+//                // Спрашиваем о дочерних целях
+//                QMessageBox::StandardButton reply;
+//                reply = QMessageBox::question(this, "Дочерние цели",
+//                                             "У этой цели есть дочерние цели. "
+//                                             "Удалить их тоже?",
+//                                             QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+
+//                if (reply == QMessageBox::Cancel) {
+//                    return false;
+//                } else if (reply == QMessageBox::Yes) {
+//                    deleteSubgoals(goal->subgoalIds);
+//                }
+//                // Если No - просто удаляем родительскую цель
+//            }
+
+//            // Удаляем цель из всех моделей
+//            if (todayModel) todayModel->removeGoal(goalId);
+//            if (incomingModel) incomingModel->removeGoal(goalId);
+//            if (calendarModel) calendarModel->removeGoal(goalId);
+
+//            // Удаляем из основного списка
+//            delete allGoals[i];  // Освобождаем память
+//            allGoals.removeAt(i);
+
+//            return true;
+//        }
+//    }
+
+//    return false;
+//}
+
 bool MainWindow::deleteGoalById(const QString& goalId)
 {
-    // Находим и удаляем цель
+    // Находим цель в основном списке
+    int goalIndex = -1;
+    Goal* goalToDelete = nullptr;
+
     for (int i = 0; i < allGoals.size(); ++i) {
         if (allGoals[i]->id == goalId) {
-            Goal* goal = allGoals[i];
-
-            // Сначала удаляем дочерние цели (если есть)
-            if (!goal->subgoalIds.isEmpty()) {
-                // Спрашиваем о дочерних целях
-                QMessageBox::StandardButton reply;
-                reply = QMessageBox::question(this, "Дочерние цели",
-                                             "У этой цели есть дочерние цели. "
-                                             "Удалить их тоже?",
-                                             QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
-
-                if (reply == QMessageBox::Cancel) {
-                    return false;
-                } else if (reply == QMessageBox::Yes) {
-                    deleteSubgoals(goal->subgoalIds);
-                }
-                // Если No - просто удаляем родительскую цель
-            }
-
-            // Удаляем цель из всех моделей
-            if (todayModel) todayModel->removeGoal(goalId);
-            if (incomingModel) incomingModel->removeGoal(goalId);
-            if (calendarModel) calendarModel->removeGoal(goalId);
-
-            // Удаляем из основного списка
-            delete allGoals[i];  // Освобождаем память
-            allGoals.removeAt(i);
-
-            return true;
+            goalIndex = i;
+            goalToDelete = allGoals[i];
+            break;
         }
     }
 
-    return false;
+    if (!goalToDelete) {
+        qDebug() << "Goal not found:" << goalId;
+        return false;
+    }
+
+    // Удаляем дочерние цели (если есть)
+    if (!goalToDelete->subgoalIds.isEmpty()) {
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Дочерние цели",
+                                     "У этой цели есть дочерние цели. "
+                                     "Удалить их тоже?",
+                                     QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+
+        if (reply == QMessageBox::Cancel) {
+            return false;
+        } else if (reply == QMessageBox::Yes) {
+            // Создаем копию списка, т.к. оригинал будет изменяться
+            QStringList subgoalIdsCopy = goalToDelete->subgoalIds;
+            deleteSubgoals(subgoalIdsCopy);
+        }
+    }
+
+    // Удаляем цель из всех моделей ПЕРЕД удалением из основного списка
+    if (todayModel) todayModel->removeGoal(goalId);
+    if (incomingModel) incomingModel->removeGoal(goalId);
+    if (calendarModel) calendarModel->removeGoal(goalId);
+
+    // Также удаляем из моделей канбана
+    for (GoalsTableModel* model : kanbanModels) {
+        if (model) model->removeGoal(goalId);
+    }
+
+    // Удаляем из моделей тэгов
+    for (GoalsTableModel* model : tagModels.values()) {
+        if (model) model->removeGoal(goalId);
+    }
+
+    // Теперь удаляем из основного списка и освобождаем память
+    delete goalToDelete;
+    allGoals.removeAt(goalIndex);
+
+    // Эмитируем сигнал об изменении данных (если нужно)
+    emit dataChangedForAllModels();
+
+    return true;
 }
 
 void MainWindow::deleteSubgoals(const QStringList& subgoalIds)
@@ -3262,5 +3323,14 @@ void MainWindow::openEditGoal(const QString& goalId)
         saveGoalsToJson();
         updateAllModels();
     }
+}
+
+void MainWindow::dataChangedForAllModels()
+{
+    // Обновляем все модели
+    updateAllModels();
+
+    // Можно также эмитировать кастомный сигнал, если нужно
+    emit modelsDataChanged();
 }
 

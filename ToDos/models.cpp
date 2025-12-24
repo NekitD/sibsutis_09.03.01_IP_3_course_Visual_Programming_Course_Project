@@ -289,12 +289,53 @@ QVariant GoalsTableModel::headerData(int section, Qt::Orientation orientation, i
     return {};
 }
 
+//bool GoalsTableModel::removeGoal(const QString& goalId)
+//{
+//    if (!m_sourceGoals)
+//        return false;
+
+//    // Находим цель в источнике данных
+//    for (int i = 0; i < m_sourceGoals->size(); ++i) {
+//        Goal* goal = m_sourceGoals->at(i);
+//        if (goal->id == goalId) {
+//            // Находим индекс в отфильтрованном списке
+//            int filteredRow = -1;
+//            for (int j = 0; j < m_filteredGoals.size(); ++j) {
+//                if (m_filteredGoals[j] == goal) {
+//                    filteredRow = j;
+//                    break;
+//                }
+//            }
+
+//            // Удаляем из источника (но НЕ удаляем объект - этим займется MainWindow)
+//            const_cast<QVector<Goal*>*>(m_sourceGoals)->removeAt(i);
+
+//            // Обновляем отфильтрованный список
+//            if (filteredRow >= 0) {
+//                beginRemoveRows(QModelIndex(), filteredRow, filteredRow);
+//                m_filteredGoals.removeAt(filteredRow);
+//                endRemoveRows();
+//            } else {
+//                // Если цель не в фильтре, просто перефильтруем
+//                applyFilters();
+//            }
+
+//            emit dataChangedExternally();
+//            return true;
+//        }
+//    }
+
+//    return false;
+//}
+
 bool GoalsTableModel::removeGoal(const QString& goalId)
 {
-    if (!m_sourceGoals)
+    if (!m_sourceGoals) {
+        qDebug() << "No source goals in model";
         return false;
+    }
 
-    // Находим цель в источнике данных
+    // Находим цель в основном источнике данных
     for (int i = 0; i < m_sourceGoals->size(); ++i) {
         Goal* goal = m_sourceGoals->at(i);
         if (goal->id == goalId) {
@@ -307,24 +348,21 @@ bool GoalsTableModel::removeGoal(const QString& goalId)
                 }
             }
 
-            // Удаляем из источника (но НЕ удаляем объект - этим займется MainWindow)
-            const_cast<QVector<Goal*>*>(m_sourceGoals)->removeAt(i);
-
-            // Обновляем отфильтрованный список
+            // Если цель есть в отфильтрованном списке, удаляем её
             if (filteredRow >= 0) {
                 beginRemoveRows(QModelIndex(), filteredRow, filteredRow);
                 m_filteredGoals.removeAt(filteredRow);
                 endRemoveRows();
             } else {
-                // Если цель не в фильтре, просто перефильтруем
+                // Если цель не в фильтре, просто обновляем модель
                 applyFilters();
             }
 
-            emit dataChangedExternally();
             return true;
         }
     }
 
+    qDebug() << "Goal not found in model:" << goalId;
     return false;
 }
 

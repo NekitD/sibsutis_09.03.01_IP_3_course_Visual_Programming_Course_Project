@@ -45,20 +45,6 @@
             ],
             "target": 0,
             "type": "simple"
-        },
-        {
-            "current": 0,
-            "deadline": "",
-            "description": "пкып",
-            "folderId": "folder_1",
-            "id": "2617c811-ffb1-4efd-a5b0-b46912470f24",
-            "name": "рв",
-            "subgoalIds": [
-            ],
-            "tagIds": [
-            ],
-            "target": 0,
-            "type": "simple"
         }
     ]
 }

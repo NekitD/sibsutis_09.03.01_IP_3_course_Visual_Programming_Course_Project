@@ -157,6 +157,8 @@ private:
 
     void openEditGoal(const QString& goalId);
 
+    void dataChangedForAllModels();
+
 private slots:
     void openFolder(bool newness);
     void openAbout();
@@ -166,6 +168,9 @@ private slots:
     void openCreateGoalDialog();
     void onGoalSelected(const QModelIndex& current, const QModelIndex& previous);
     void deleteSelectedGoal();
+
+signals:
+    void modelsDataChanged();
 };
 
 
